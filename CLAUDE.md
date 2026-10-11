@@ -21,3 +21,4 @@ LifeOS is a personal management app that connects tasks and money: tasks with du
 - The user is a beginner: explain what you did in simple terms.
 - Test instructions: numbered steps, one command per step, say what they should see, and use Windows PowerShell commands (`curl.exe`, not `curl`).
 - Never commit or push. The user does that themselves.
+- Follow DESIGN.md for all UI work.
