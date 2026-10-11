@@ -12,6 +12,10 @@ export function dateError(value, name) {
   return null;
 }
 
+export function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 // Returns { value } with clean data, or { error } with a message.
 export function validateTask(body = {}) {
   const title = typeof body.title === 'string' ? body.title.trim() : '';

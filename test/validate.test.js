@@ -1,6 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateTask } from '../server/validate.js';
+import { validateTask, isUuid } from '../server/validate.js';
+
+test('isUuid accepts real ids and rejects made-up ones', () => {
+  assert.ok(isUuid('3f2b8c1e-5a4d-4e6f-9b1a-0c2d3e4f5a6b'));
+  for (const bad of ['123', 'abc', '', "1'; drop table tasks;--"]) assert.ok(!isUuid(bad), bad);
+});
 
 test('accepts a good task and trims the title', () => {
   const r = validateTask({ title: '  Pay rent ', due_date: '2026-10-31', cost: '12.345' });
