@@ -1,4 +1,4 @@
-# LifeStack
+# LifeOS
 
 A personal management app that connects tasks and money. See [PLAN.md](PLAN.md) for the full plan.
 

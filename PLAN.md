@@ -1,4 +1,4 @@
-# LifeStack: Version 1 Plan
+# LifeOS: Version 1 Plan
 
 A personal management app that connects tasks and money.
 Stack: Node.js + Express (backend), Supabase Postgres (database), plain HTML/CSS/JS (frontend).
