@@ -1,4 +1,5 @@
 import express from 'express';
+import { supabase } from './supabase.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -6,8 +7,13 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static('public'));
 
-app.get('/api/health', (req, res) => {
-  res.json({ ok: true });
+app.get('/api/health', async (req, res) => {
+  const { error } = await supabase.from('tasks').select('id').limit(1);
+  if (error) {
+    console.error('Health check failed:', error.message);
+    return res.status(500).json({ ok: false, db: false, error: error.message });
+  }
+  res.json({ ok: true, db: true });
 });
 
 // Unknown /api routes get JSON, not an HTML page
