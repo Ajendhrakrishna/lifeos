@@ -4,8 +4,98 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LifeOS</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>LifeOS</h1>
+  <!-- Marble veining, drawn in code. Kept in the margins so text never sits on a vein. -->
+  <svg class="marble" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="soft" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="0.8"/></filter>
+      <filter id="cloud" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>
+    </defs>
+    <g fill="#7A6858" filter="url(#cloud)" opacity="0.07">
+      <ellipse cx="200" cy="520" rx="260" ry="210"/>
+      <ellipse cx="1280" cy="300" rx="240" ry="200"/>
+    </g>
+    <g fill="none" stroke-linecap="round" filter="url(#soft)">
+      <path d="M-10 80 C90 200 40 320 160 430 S260 640 190 760 S300 860 280 920" stroke="#7A6858" stroke-opacity="0.22" stroke-width="1.4"/>
+      <path d="M160 430 C230 400 300 440 330 520" stroke="#7A6858" stroke-opacity="0.15" stroke-width="0.9"/>
+      <path d="M-10 300 C80 340 120 400 60 520" stroke="#B8934A" stroke-opacity="0.35" stroke-width="1"/>
+      <path d="M300 -10 C360 40 330 90 380 140" stroke="#7A6858" stroke-opacity="0.14" stroke-width="0.9"/>
+      <path d="M1450 40 C1340 180 1400 300 1290 420 S1180 600 1260 720 S1330 840 1300 920" stroke="#7A6858" stroke-opacity="0.22" stroke-width="1.4"/>
+      <path d="M1290 420 C1220 380 1160 420 1130 500" stroke="#7A6858" stroke-opacity="0.15" stroke-width="0.9"/>
+      <path d="M1450 560 C1370 600 1340 680 1400 780" stroke="#B8934A" stroke-opacity="0.35" stroke-width="1"/>
+      <path d="M1000 920 C1040 860 1010 820 1070 770" stroke="#7A6858" stroke-opacity="0.14" stroke-width="0.9"/>
+    </g>
+  </svg>
+
+  <header class="site-header">
+    <h1 class="wordmark">LifeOS</h1>
+    <div class="gold-rule"></div>
+  </header>
+
+  <main>
+    <section class="card" aria-labelledby="tasks-heading">
+      <h2 id="tasks-heading">Tasks</h2>
+
+      <form id="task-form" class="task-form" novalidate>
+        <div class="field field-title">
+          <label class="label" for="task-title-input">Task</label>
+          <input id="task-title-input" name="title" type="text" maxlength="200" autocomplete="off" placeholder="What needs doing?">
+        </div>
+        <div class="field">
+          <label class="label" for="task-due-input">Due</label>
+          <input id="task-due-input" name="due_date" type="date" class="mono">
+        </div>
+        <div class="field">
+          <label class="label" for="task-cost-input">Cost (optional)</label>
+          <input id="task-cost-input" name="cost" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" class="mono">
+        </div>
+        <button class="btn btn-gold" type="submit">Add task</button>
+      </form>
+
+      <p id="notice" class="notice" role="alert" hidden>
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg>
+        <span id="notice-text"></span>
+      </p>
+
+      <div id="state-loading" class="skeletons" hidden>
+        <span class="sr-only">Loading your tasks</span>
+        <div class="skeleton" aria-hidden="true"></div>
+        <div class="skeleton" aria-hidden="true"></div>
+        <div class="skeleton" aria-hidden="true"></div>
+      </div>
+
+      <div id="state-empty" class="state" hidden>
+        <p class="state-line">Nothing to do yet. Add a task to begin.</p>
+      </div>
+
+      <div id="state-error" class="state" hidden>
+        <p class="state-line">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg>
+          <span id="state-error-text"></span>
+        </p>
+        <button id="retry" class="btn btn-quiet" type="button">Try again</button>
+      </div>
+
+      <ul id="task-list" class="task-list"></ul>
+    </section>
+  </main>
+
+  <template id="task-template">
+    <li class="task">
+      <input class="task-check" type="checkbox">
+      <span class="task-title"></span>
+      <span class="task-meta">
+        <span class="sr-only">Due </span><span class="task-due mono"></span>
+        <span class="task-cost-wrap"><span class="sr-only">Cost </span><span class="task-cost mono"></span></span>
+      </span>
+      <button class="icon-btn task-delete" type="button">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+    </li>
+  </template>
+
+  <script type="module" src="tasks.js"></script>
 </body>
 </html>
