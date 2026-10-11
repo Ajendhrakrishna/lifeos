@@ -35,7 +35,7 @@
   </header>
 
   <main>
-    <section class="card" aria-labelledby="tasks-heading">
+    <section id="tasks" class="card" aria-labelledby="tasks-heading">
       <h2 id="tasks-heading">Tasks</h2>
 
       <form id="task-form" class="task-form" novalidate>
@@ -48,37 +48,112 @@
           <input id="task-due-input" name="due_date" type="date" class="mono">
         </div>
         <div class="field">
-          <label class="label" for="task-cost-input">Cost (optional)</label>
+          <label class="label" for="task-cost-input">Cost in ₹ (optional)</label>
           <input id="task-cost-input" name="cost" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" class="mono">
         </div>
         <button class="btn btn-gold" type="submit">Add task</button>
       </form>
 
-      <p id="notice" class="notice" role="alert" hidden>
+      <p class="notice" role="alert" hidden>
         <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg>
-        <span id="notice-text"></span>
+        <span class="notice-text"></span>
       </p>
 
-      <div id="state-loading" class="skeletons" hidden>
+      <div class="skeletons" data-state="loading" hidden>
         <span class="sr-only">Loading your tasks</span>
         <div class="skeleton" aria-hidden="true"></div>
         <div class="skeleton" aria-hidden="true"></div>
         <div class="skeleton" aria-hidden="true"></div>
       </div>
 
-      <div id="state-empty" class="state" hidden>
+      <div class="state" data-state="empty" hidden>
         <p class="state-line">Nothing to do yet. Add a task to begin.</p>
       </div>
 
-      <div id="state-error" class="state" hidden>
+      <div class="state" data-state="error" hidden>
         <p class="state-line">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg>
-          <span id="state-error-text"></span>
+          <span class="state-error-text"></span>
         </p>
-        <button id="retry" class="btn btn-quiet" type="button">Try again</button>
+        <button class="btn btn-quiet retry" type="button">Try again</button>
       </div>
 
       <ul id="task-list" class="task-list"></ul>
+    </section>
+
+    <section id="money" class="card" aria-labelledby="money-heading">
+      <h2 id="money-heading">Money</h2>
+
+      <div class="figures">
+        <div>
+          <span class="label">Budget · <span id="month-name"></span></span>
+          <p class="big" id="budget-figure">—</p>
+        </div>
+        <div>
+          <span class="label">Spent this month</span>
+          <p class="big" id="spent-figure">—</p>
+        </div>
+      </div>
+
+      <form id="budget-form" class="budget-form" novalidate>
+        <div class="field">
+          <label class="label" for="budget-amount-input">Monthly budget in ₹</label>
+          <input id="budget-amount-input" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" class="mono">
+        </div>
+        <button class="btn btn-gold" type="submit">Set budget</button>
+      </form>
+
+      <div class="gold-line"></div>
+
+      <form id="expense-form" class="expense-form" novalidate>
+        <div class="field">
+          <label class="label" for="expense-amount-input">Amount in ₹</label>
+          <input id="expense-amount-input" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" class="mono">
+        </div>
+        <div class="field">
+          <label class="label" for="expense-category-input">Category</label>
+          <select id="expense-category-input" name="category">
+            <option>Food</option>
+            <option>Transport</option>
+            <option>Bills</option>
+            <option>Shopping</option>
+            <option>Health</option>
+            <option>Fun</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label" for="expense-date-input">Date</label>
+          <input id="expense-date-input" name="spent_on" type="date" class="mono">
+        </div>
+        <button class="btn btn-gold" type="submit">Add expense</button>
+      </form>
+
+      <p class="notice" role="alert" hidden>
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg>
+        <span class="notice-text"></span>
+      </p>
+
+      <div class="skeletons" data-state="loading" hidden>
+        <span class="sr-only">Loading your expenses</span>
+        <div class="skeleton" aria-hidden="true"></div>
+        <div class="skeleton" aria-hidden="true"></div>
+        <div class="skeleton" aria-hidden="true"></div>
+      </div>
+
+      <div class="state" data-state="empty" hidden>
+        <p class="state-line">No expenses this month. Add one above.</p>
+      </div>
+
+      <div class="state" data-state="error" hidden>
+        <p class="state-line">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg>
+          <span class="state-error-text"></span>
+        </p>
+        <button class="btn btn-quiet retry" type="button">Try again</button>
+      </div>
+
+      <ul id="expense-list" class="expense-list"></ul>
     </section>
   </main>
 
@@ -96,6 +171,15 @@
     </li>
   </template>
 
+  <template id="expense-template">
+    <li class="expense">
+      <span class="expense-category"></span>
+      <span class="expense-amount mono"></span>
+      <span class="expense-date mono"></span>
+    </li>
+  </template>
+
   <script type="module" src="tasks.js"></script>
+  <script type="module" src="money.js"></script>
 </body>
 </html>

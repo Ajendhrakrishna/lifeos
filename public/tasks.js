@@ -1,81 +1,61 @@
 import { api } from './api.js';
+import { $, todayString, formatMoney, formatDate, setState, showNotice } from './ui.js';
 
-const $ = (selector) => document.querySelector(selector);
+const root = $('#tasks');
 const form = $('#task-form');
 const list = $('#task-list');
-const states = { loading: $('#state-loading'), empty: $('#state-empty'), error: $('#state-error') };
 let loaded = false; // false until the first successful load
 
 // All text from the server goes in with textContent, never innerHTML.
 
-function todayString() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-function formatDate(iso) {
-  const [y, m, d] = iso.split('-').map(Number);
-  const options = { day: 'numeric', month: 'short' };
-  if (y !== new Date().getFullYear()) options.year = 'numeric';
-  return new Date(y, m - 1, d).toLocaleDateString('en-GB', options);
-}
-
-function setState(name) {
-  for (const [key, el] of Object.entries(states)) el.hidden = key !== name;
-}
-
-function showNotice(message) {
-  $('#notice-text').textContent = message;
-  $('#notice').hidden = !message;
-}
-
 function taskItem(task) {
   const li = $('#task-template').content.firstElementChild.cloneNode(true);
   li.dataset.id = task.id;
-  const check = li.querySelector('.task-check');
+  const check = $('.task-check', li);
   check.checked = task.done;
   check.setAttribute('aria-label', `Done: ${task.title}`);
-  li.querySelector('.task-title').textContent = task.title;
-  li.querySelector('.task-due').textContent = formatDate(task.due_date);
+  $('.task-title', li).textContent = task.title;
+  $('.task-due', li).textContent = formatDate(task.due_date);
   const hasCost = task.cost !== null;
-  li.querySelector('.task-cost-wrap').hidden = !hasCost;
-  if (hasCost) li.querySelector('.task-cost').textContent = Number(task.cost).toFixed(2);
-  li.querySelector('.task-delete').setAttribute('aria-label', `Delete task: ${task.title}`);
+  $('.task-cost-wrap', li).hidden = !hasCost;
+  if (hasCost) $('.task-cost', li).textContent = formatMoney(task.cost);
+  $('.task-delete', li).setAttribute('aria-label', `Delete task: ${task.title}`);
   return li;
 }
 
 async function load() {
-  if (!loaded) setState('loading');
+  if (!loaded) setState(root, 'loading');
   try {
     const tasks = await api('/tasks');
     list.replaceChildren(...tasks.map(taskItem));
-    setState(tasks.length ? null : 'empty');
+    setState(root, tasks.length ? null : 'empty');
     loaded = true;
   } catch (err) {
-    if (loaded) return showNotice(`Couldn't refresh your tasks. ${err.message}`);
+    if (loaded) return showNotice(root, `Couldn't refresh your tasks. ${err.message}`);
     list.replaceChildren();
-    $('#state-error-text').textContent = `Couldn't load your tasks. ${err.message}`;
-    setState('error');
+    $('.state-error-text', root).textContent = `Couldn't load your tasks. ${err.message}`;
+    setState(root, 'error');
   }
 }
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  const button = form.querySelector('button[type="submit"]');
-  const cost = form.elements.cost.value.trim();
+  const button = $('button[type="submit"]', form);
+  const f = form.elements;
+  const cost = f.cost.value.trim();
   button.disabled = true;
-  showNotice('');
+  showNotice(root, '');
   try {
     await api('/tasks', {
       method: 'POST',
-      body: { title: form.elements.title.value, due_date: form.elements.due_date.value, cost: cost || undefined },
+      body: { title: f.title.value, due_date: f.due_date.value, cost: cost || undefined },
     });
-    form.elements.title.value = '';
-    form.elements.cost.value = '';
-    form.elements.title.focus();
+    f.title.value = '';
+    f.cost.value = '';
+    f.title.focus();
     await load();
   } catch (err) {
-    showNotice(err.message);
+    showNotice(root, err.message);
   } finally {
     button.disabled = false;
   }
@@ -84,31 +64,31 @@ form.addEventListener('submit', async (event) => {
 list.addEventListener('change', async (event) => {
   const check = event.target;
   if (!check.matches('.task-check')) return;
-  showNotice('');
+  showNotice(root, '');
   try {
     await api(`/tasks/${check.closest('.task').dataset.id}`, { method: 'PATCH', body: { done: check.checked } });
     await load();
   } catch (err) {
     check.checked = !check.checked; // put it back, the server said no
-    showNotice(err.message);
+    showNotice(root, err.message);
   }
 });
 
 list.addEventListener('click', async (event) => {
   const button = event.target.closest('.task-delete');
   if (!button) return;
-  showNotice('');
+  showNotice(root, '');
   button.disabled = true;
   try {
     await api(`/tasks/${button.closest('.task').dataset.id}`, { method: 'DELETE' });
     await load();
   } catch (err) {
     button.disabled = false;
-    showNotice(err.message);
+    showNotice(root, err.message);
   }
 });
 
-$('#retry').addEventListener('click', () => {
+$('.retry', root).addEventListener('click', () => {
   loaded = false;
   load();
 });
