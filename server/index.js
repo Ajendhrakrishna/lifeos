@@ -1,5 +1,6 @@
 import express from 'express';
 import { supabase } from './supabase.js';
+import tasksRouter from './routes/tasks.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -16,6 +17,8 @@ app.get('/api/health', async (req, res) => {
   res.json({ ok: true, db: true });
 });
 
+app.use('/api/tasks', tasksRouter);
+
 // Unknown /api routes get JSON, not an HTML page
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Not found' });
@@ -23,6 +26,10 @@ app.use('/api', (req, res) => {
 
 // Last stop for any error thrown in a route
 app.use((err, req, res, next) => {
+  // Bad JSON from the browser is the caller's mistake, not ours
+  if (err.status >= 400 && err.status < 500) {
+    return res.status(err.status).json({ error: 'Invalid request' });
+  }
   console.error(err);
   res.status(500).json({ error: 'Something went wrong on the server' });
 });
