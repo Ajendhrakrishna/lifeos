@@ -10,6 +10,7 @@
   --terracotta: #A5472F; /* money problems only; unused until the dashboard */
 
   --gold-metal: linear-gradient(135deg, var(--gold), var(--gold-light) 50%, var(--gold));
+  --gold-text: linear-gradient(135deg, var(--gold-light), var(--gold));
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, "SF Mono", Consolas, "Liberation Mono", monospace;
@@ -50,9 +51,38 @@ body {
 
 /* Header */
 .site-header, main { width: min(100% - 32px, 720px); margin-inline: auto; }
-.site-header { padding: 32px 0 24px; }
-.wordmark { margin: 0; font: 600 2rem/1.1 var(--serif); letter-spacing: 0.02em; }
-.gold-rule { width: 64px; height: 2px; margin-top: 10px; background: var(--gold-metal); }
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 32px 0 24px;
+}
+.wordmark { margin: 0; font: 700 3rem/1 var(--serif); letter-spacing: 0.02em; color: var(--espresso); }
+/* Large metallic text. The shadow is a filter because text-shadow would show through the clipped gradient. */
+.wordmark .os {
+  display: inline-block;
+  background: var(--gold-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 1px rgba(42, 31, 26, 0.35));
+}
+
+.nav { display: flex; gap: 24px; }
+.nav-link {
+  padding: 8px 0 6px;
+  font-size: 0.875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--charcoal);
+  background: var(--gold-metal) bottom / 100% 2px no-repeat;
+  background-size: 0 2px;
+}
+.nav-link:hover { background-size: 100% 1px; }
+.nav-link[aria-current="page"] { font-weight: 700; background-size: 100% 2px; }
 
 main { padding-bottom: 48px; }
 
@@ -139,7 +169,50 @@ input.mono { font-family: var(--mono); }
 .big { margin: 0; font: 600 2rem/1.2 var(--serif); overflow-wrap: anywhere; }
 .big.none { font-size: 1.125rem; font-weight: 400; line-height: 2.2rem; }
 
-.budget-form { display: grid; grid-template-columns: 1fr auto; gap: 12px 16px; align-items: end; }
+.figure-row { display: flex; align-items: center; gap: 4px; }
+.menu-wrap { position: relative; }
+.menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  min-width: 160px;
+  padding: 6px;
+  background: var(--espresso);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px rgba(42, 31, 26, 0.3);
+}
+.menu-item {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 14px;
+  font: inherit;
+  text-align: left;
+  color: var(--cream);
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.menu-item:hover, .menu-item:focus-visible { background: rgba(230, 210, 160, 0.16); }
+
+.dialog {
+  width: min(100% - 32px, 400px);
+  padding: 24px;
+  color: var(--cream);
+  background: var(--espresso);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+}
+.dialog::backdrop { background: rgba(42, 31, 26, 0.45); backdrop-filter: blur(4px); }
+.dialog h3 { margin: 0 0 16px; font: 600 1.5rem/1.2 var(--serif); }
+.dialog .label { color: var(--gold-light); }
+.dialog input { background: var(--cream); }
+.dialog .notice { color: var(--cream); }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+.dialog .btn-quiet { color: var(--cream); }
+
 .expense-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px 16px; align-items: end; }
 .expense-form .btn { grid-column: 1 / -1; }
 .gold-line { height: 1px; margin: 24px 0; background: var(--gold-metal); }
@@ -231,7 +304,7 @@ input.mono { font-family: var(--mono); }
 /* Phones */
 @media (max-width: 560px) {
   .card { padding: 16px; }
-  .task-form, .budget-form, .expense-form { grid-template-columns: 1fr; }
+  .task-form, .expense-form { grid-template-columns: 1fr; }
   .figures { grid-template-columns: 1fr; }
   .btn-gold, .expense-form .btn { width: 100%; }
 }

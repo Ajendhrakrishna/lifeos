@@ -1,54 +1,61 @@
 # LifeOS Design
 
-Warm, luxurious, calm. Cream marble, frosted cards, metallic champagne gold. Simple enough for any college student: one page, few words, no jargon.
+Warm, luxurious, calm. Cream marble, frosted cards, metallic champagne gold. Simple enough for any college student: few words, no jargon, one section at a time.
 
 ## Colours
 
 | Role | Name | Hex |
 |---|---|---|
 | Page | Cream Alabaster | #F2E9D8 |
-| Panels, ask bar | Rich Espresso | #2A1F1A |
+| Panels, menus, dialogs, ask bar | Rich Espresso | #2A1F1A |
 | Text | Deep Charcoal | #26231F |
 | Secondary text | Soft Taupe | #7A6858 |
 | Accent | Champagne Gold | #B8934A |
-| Gold highlight (gradients only) | Light Gold | #E6D2A0 |
+| Gold highlight | Light Gold | #E6D2A0 |
 | Warning | Terracotta | #A5472F |
 
 - Define each as a CSS variable once; never hard-code hex elsewhere.
-- Metallic gold = gradient from #B8934A to #E6D2A0, used for borders, rules, buttons and the wordmark underline. Text on Espresso is Cream Alabaster.
+- Metallic gold = gradient between #B8934A and #E6D2A0, used for borders, rules, buttons, the active nav underline and the wordmark.
+- On Espresso, text is Cream Alabaster and labels are Light Gold (Taupe is too dim there).
 
 ## Surfaces
 
 - **Page:** Cream Alabaster with soft marble veining drawn as inline SVG (thin, low-contrast, slightly blurred curves). No image files.
 - **Cards:** translucent cream (about 60% opacity) with backdrop blur, 1px champagne gold border, 1px white highlight along the top edge, soft warm shadow.
-- **Panels and ask bar:** solid Rich Espresso, same corner radius as cards.
+- **Panels, menus, dialogs and ask bar:** solid Rich Espresso, same corner radius as cards. Dialogs dim the page behind them with a blurred espresso veil.
 
 ## Type
 
 - **Serif** (Georgia-style stack): wordmark, headings, big numbers.
-- **Sans-serif** (system stack): body text.
+- **Sans-serif** (system stack): body text, nav, buttons.
 - **Monospace**: dates and amounts.
 - **Labels:** small, uppercase, wide letter spacing (about 0.12em), Soft Taupe.
 
+## Header and navigation
+
+- **Wordmark**, top left, large serif: "Life" in Rich Espresso, "OS" in metallic gold (gradient #E6D2A0 to #B8934A) with a soft drop shadow so the pale end stays readable.
+- **Nav**, top right: "Tasks" and "Money" as plain text links, Charcoal, uppercase labels. The active one has a 2px metallic gold underline and `aria-current="page"`.
+- Only one section shows at a time. The URL hash picks it (#tasks, #money), so a refresh stays put. Default is Tasks; an unknown hash falls back to Tasks.
+- On phones the header wraps: wordmark first, nav beneath if it does not fit.
+
 ## Layout
 
-No sidebar. One page, top to bottom:
-1. Header: LifeOS wordmark.
-2. One headline sentence summarising the week (serif).
-3. Week ribbon: 7 day columns, each showing that day's tasks, exams, bills and spending.
-4. One-line money summary: spent this month, budget left.
-5. AI ask bar docked at the bottom. Later version: reserve the space only, no function yet.
+No sidebar. One centred column under the header, showing the chosen section. Later versions add, in order: a one-sentence headline, a 7-day week ribbon (tasks, exams, bills, spending), a one-line money summary, and an AI ask bar docked at the bottom (reserve the space only). Phones: the week ribbon scrolls sideways, one day mostly visible and the next peeking in.
 
-Phones: the week ribbon scrolls sideways, with one day mostly visible and the next peeking in. The ask bar stays docked.
+## Menus and dialogs
+
+- A three-dot line icon button opens a small espresso menu beside the thing it controls (e.g. the budget figure). It has `aria-haspopup`, `aria-expanded`, and role="menu" items.
+- Menu keys: Enter, Space or Down opens; Esc closes and returns focus to the button; clicking elsewhere or tabbing away closes it.
+- Dialogs use the native `<dialog>` so focus is trapped and Esc closes. Focus returns to the button that opened it. Errors show inside the dialog, never behind it.
 
 ## Rules
 
-- Gold is never used for small text on cream (too low contrast). Gold is for borders, lines, icons and large text only.
+- Gold is never used for small text on cream (too low contrast). Gold is for borders, lines, icons, large text and the wordmark only.
 - Text never sits on a marble vein. Keep veins in the margins and behind empty areas, or put text on a card.
 - No emoji. Use simple line icons (SVG, 1.5px stroke, Charcoal or Taupe).
 - Terracotta appears only for money problems (over budget, upcoming costs above what is left). Never for decoration or non-money errors.
 - Soft Taupe only for text at 14px or larger.
-- Every button and input is keyboard-reachable with a visible gold focus ring.
+- Every button, link and input is keyboard-reachable with a visible gold focus ring.
 - Respect reduced-motion settings; any animation is slow and gentle.
 
 ## States
@@ -56,4 +63,4 @@ Phones: the week ribbon scrolls sideways, with one day mostly visible and the ne
 - **Empty:** a calm line in serif plus one plain next step, e.g. "Nothing due this week. Add a task to begin." Day columns with nothing show a faint dash.
 - **Loading:** cards keep their shape and show a slow gold shimmer. No spinners, and no layout jump when data arrives.
 - **Error:** a plain sentence on the card saying what failed and a "Try again" button. Charcoal text and a line icon, not terracotta, unless it is a money problem.
-- **No budget set:** the money line reads "No budget set" with a "Set budget" link, not a warning.
+- **No budget set:** the budget figure reads "No budget set", and "Edit budget" in its three-dot menu sets one. Not a warning.

@@ -30,8 +30,11 @@
   </svg>
 
   <header class="site-header">
-    <h1 class="wordmark">LifeOS</h1>
-    <div class="gold-rule"></div>
+    <h1 class="wordmark"><span>Life</span><span class="os">OS</span></h1>
+    <nav class="nav" aria-label="Sections">
+      <a class="nav-link" href="#tasks">Tasks</a>
+      <a class="nav-link" href="#money">Money</a>
+    </nav>
   </header>
 
   <main>
@@ -81,27 +84,29 @@
       <ul id="task-list" class="task-list"></ul>
     </section>
 
-    <section id="money" class="card" aria-labelledby="money-heading">
+    <section id="money" class="card" hidden aria-labelledby="money-heading">
       <h2 id="money-heading">Money</h2>
 
       <div class="figures">
         <div>
           <span class="label">Budget · <span id="month-name"></span></span>
-          <p class="big" id="budget-figure">—</p>
+          <div class="figure-row">
+            <p class="big" id="budget-figure">—</p>
+            <div class="menu-wrap">
+              <button id="budget-menu-button" class="icon-btn" type="button" aria-label="Budget options" aria-haspopup="menu" aria-expanded="false" aria-controls="budget-menu">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+              </button>
+              <div id="budget-menu" class="menu" role="menu" aria-label="Budget options" hidden>
+                <button id="edit-budget" class="menu-item" type="button" role="menuitem">Edit budget</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div>
           <span class="label">Spent this month</span>
           <p class="big" id="spent-figure">—</p>
         </div>
       </div>
-
-      <form id="budget-form" class="budget-form" novalidate>
-        <div class="field">
-          <label class="label" for="budget-amount-input">Monthly budget in ₹</label>
-          <input id="budget-amount-input" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" class="mono">
-        </div>
-        <button class="btn btn-gold" type="submit">Set budget</button>
-      </form>
 
       <div class="gold-line"></div>
 
@@ -154,6 +159,24 @@
       </div>
 
       <ul id="expense-list" class="expense-list"></ul>
+
+      <dialog id="budget-dialog" class="dialog" aria-labelledby="budget-dialog-title">
+        <form id="budget-form" novalidate>
+          <h3 id="budget-dialog-title">Edit budget</h3>
+          <div class="field">
+            <label class="label" for="budget-amount-input">Budget for <span id="dialog-month"></span>, in ₹</label>
+            <input id="budget-amount-input" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" class="mono">
+          </div>
+          <p class="notice" role="alert" hidden>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg>
+            <span class="notice-text"></span>
+          </p>
+          <div class="dialog-actions">
+            <button class="btn btn-quiet" type="button" id="budget-cancel">Cancel</button>
+            <button class="btn btn-gold" type="submit">Save</button>
+          </div>
+        </form>
+      </dialog>
     </section>
   </main>
 
@@ -179,6 +202,7 @@
     </li>
   </template>
 
+  <script type="module" src="nav.js"></script>
   <script type="module" src="tasks.js"></script>
   <script type="module" src="money.js"></script>
 </body>
