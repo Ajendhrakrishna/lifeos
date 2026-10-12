@@ -120,11 +120,22 @@ onSubmit(
   dialog,
 );
 
-onSubmit($('#expense-form'), async (f) => {
+// "Other" reveals a box for the user's own category name
+const expenseForm = $('#expense-form');
+const customField = $('.field-custom', expenseForm);
+function syncCustom() {
+  customField.hidden = expenseForm.elements.category.value !== 'Other';
+}
+expenseForm.elements.category.addEventListener('change', syncCustom);
+syncCustom(); // the browser may have restored a choice on reload
+
+onSubmit(expenseForm, async (f) => {
   const spentOn = f.spent_on.value;
+  // A blank name under "Other" is saved as plain "Other"
+  const category = f.category.value === 'Other' ? f.custom_category.value.trim() || 'Other' : f.category.value;
   await api('/expenses', {
     method: 'POST',
-    body: { amount: f.amount.value.trim(), category: f.category.value, spent_on: spentOn },
+    body: { amount: f.amount.value.trim(), category, spent_on: spentOn },
   });
   f.amount.value = '';
   f.amount.focus();

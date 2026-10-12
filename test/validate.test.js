@@ -7,6 +7,7 @@ import {
   monthError,
   monthBounds,
   isUuid,
+  KINDS,
   CATEGORIES,
 } from '../server/validate.js';
 
@@ -16,8 +17,8 @@ test('isUuid accepts real ids and rejects made-up ones', () => {
 });
 
 test('accepts a good task and trims the title', () => {
-  const r = validateTask({ title: '  Pay rent ', due_date: '2026-10-31', cost: '12.345' });
-  assert.deepEqual(r.value, { title: 'Pay rent', due_date: '2026-10-31', cost: 12.35 });
+  const r = validateTask({ title: '  Pay rent ', due_date: '2026-10-31', kind: 'due', cost: '12.345' });
+  assert.deepEqual(r.value, { title: 'Pay rent', due_date: '2026-10-31', kind: 'due', cost: 12.35 });
 });
 
 test('cost is optional', () => {
@@ -34,15 +35,15 @@ test('rejects bad input', () => {
     { title: 'a' },
     { title: 'a', due_date: '2026-02-31' },
     { title: 'a', due_date: '31/10/2026' },
-    { title: 'a', due_date: '2026-10-31', cost: -1 },
-    { title: 'a', due_date: '2026-10-31', cost: 'abc' },
+    { title: 'a', due_date: '2026-10-31', kind: 'due', cost: -1 },
+    { title: 'a', due_date: '2026-10-31', kind: 'due', cost: 'abc' },
   ];
   for (const body of bad) assert.ok(validateTask(body).error, JSON.stringify(body));
 });
 
 test('task cost rejects things that are not money', () => {
   for (const cost of [true, [], {}, '  ', Infinity]) {
-    assert.ok(validateTask({ title: 'a', due_date: '2026-10-31', cost }).error, String(cost));
+    assert.ok(validateTask({ title: 'a', due_date: '2026-10-31', kind: 'due', cost }).error, String(cost));
   }
 });
 
@@ -92,10 +93,43 @@ test('expense: rejects zero, negative, tiny, bad category and bad date', () => {
     { ...ok, amount: 0.004 },
     { ...ok, amount: 'abc' },
     { ...ok, amount: undefined },
-    { ...ok, category: 'Yachts' },
     { ...ok, category: undefined },
+    { ...ok, category: '   ' },
+    { ...ok, category: 'x'.repeat(41) },
+    { ...ok, category: 42 },
     { ...ok, spent_on: '2026-02-31' },
     { ...ok, spent_on: undefined },
   ];
   for (const body of bad) assert.ok(validateExpense(body).error, JSON.stringify(body));
+});
+
+test('task kind defaults to other, and every kind is accepted', () => {
+  assert.equal(validateTask({ title: 'a', due_date: '2026-10-31' }).value.kind, 'other');
+  for (const kind of KINDS) {
+    assert.equal(validateTask({ title: 'a', due_date: '2026-10-31', kind }).value.kind, kind);
+  }
+});
+
+test('task kind must be one of the list', () => {
+  for (const kind of ['Due', 'exam', '', 7]) {
+    assert.ok(validateTask({ title: 'a', due_date: '2026-10-31', kind }).error, String(kind));
+  }
+});
+
+test('only "due" tasks may have a cost; "due" without a cost is fine', () => {
+  for (const kind of ['homework', 'project', 'chore', 'other', undefined]) {
+    const r = validateTask({ title: 'a', due_date: '2026-10-31', kind, cost: 10 });
+    assert.match(r.error ?? '', /due/, String(kind));
+  }
+  // An empty cost box is "no cost", so any kind may send it
+  assert.equal(validateTask({ title: 'a', due_date: '2026-10-31', kind: 'homework', cost: '' }).value.cost, null);
+  assert.equal(validateTask({ title: 'a', due_date: '2026-10-31', kind: 'due' }).value.cost, null);
+});
+
+test('expense: a custom category is trimmed and stored as typed, up to 40 characters', () => {
+  const ok = { amount: 10, spent_on: '2026-10-12' };
+  assert.equal(validateExpense({ ...ok, category: '  Gym fees ' }).value.category, 'Gym fees');
+  assert.equal(validateExpense({ ...ok, category: 'Other' }).value.category, 'Other');
+  assert.equal(validateExpense({ ...ok, category: 'x'.repeat(40) }).value.category.length, 40);
+  assert.ok(validateExpense({ ...ok, category: ' ' + 'x'.repeat(41) }).error);
 });

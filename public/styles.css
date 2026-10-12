@@ -117,13 +117,15 @@ main { padding-bottom: 48px; }
 }
 
 /* Form */
-.task-form {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
+/* Forms wrap: fields share a row and grow; a hidden field just drops out */
+.task-form, .expense-form {
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px 16px;
-  align-items: end;
+  align-items: flex-end;
 }
-.field-title { grid-column: 1 / -1; }
+.task-form .field, .expense-form .field { flex: 1 1 140px; }
+.task-form .field-title, .expense-form .btn { flex-basis: 100%; }
 
 input[type="text"], input[type="date"], select {
   width: 100%;
@@ -220,8 +222,6 @@ input.mono { font-family: var(--mono); }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
 .dialog .btn-quiet { color: var(--cream); }
 
-.expense-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px 16px; align-items: end; }
-.expense-form .btn { grid-column: 1 / -1; }
 .gold-line { height: 1px; margin: 24px 0; background: var(--gold-metal); }
 
 .expense-list { margin: 16px 0 0; padding: 0; list-style: none; }
@@ -250,6 +250,7 @@ input.mono { font-family: var(--mono); }
 .task-title { grid-area: title; overflow-wrap: anywhere; }
 .task-meta { grid-area: meta; display: flex; gap: 16px; font-size: 0.875rem; color: var(--taupe); }
 .task-delete { grid-area: del; }
+.task-kind { letter-spacing: 0.12em; text-transform: uppercase; }
 
 .task-check {
   appearance: none;
@@ -311,7 +312,7 @@ input.mono { font-family: var(--mono); }
 /* Phones */
 @media (max-width: 560px) {
   .card { padding: 16px; }
-  .task-form, .expense-form { grid-template-columns: 1fr; }
+  .task-form .field, .expense-form .field, .task-form .btn { flex-basis: 100%; }
   .figures { grid-template-columns: 1fr; }
   .btn-gold, .expense-form .btn { width: 100%; }
 }

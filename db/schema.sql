@@ -6,16 +6,23 @@ create table tasks (
   user_id    uuid,
   title      text not null check (char_length(title) between 1 and 200),
   due_date   date not null,
+  kind       text not null default 'other'
+             constraint tasks_kind_check check (kind in ('due', 'homework', 'project', 'chore', 'other')),
   cost       numeric(12,2) check (cost >= 0),
   done       boolean not null default false,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- Only 'due' tasks (bills, fees) can have a cost
+  constraint tasks_cost_only_when_due check (cost is null or kind = 'due')
 );
 
 create table expenses (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid,
   amount     numeric(12,2) not null check (amount > 0),
-  category   text not null,
+  -- A fixed category or the user's own label, trimmed, 1 to 40 characters
+  category   text not null
+             constraint expenses_category_check
+             check (char_length(category) between 1 and 40 and category = btrim(category)),
   spent_on   date not null,
   created_at timestamptz not null default now()
 );

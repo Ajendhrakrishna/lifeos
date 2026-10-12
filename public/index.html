@@ -47,10 +47,20 @@
           <input id="task-title-input" name="title" type="text" maxlength="200" autocomplete="off" placeholder="What needs doing?">
         </div>
         <div class="field">
-          <label class="label" for="task-due-input">Due</label>
-          <input id="task-due-input" name="due_date" type="date" class="mono">
+          <label class="label" for="task-kind-input">Kind</label>
+          <select id="task-kind-input" name="kind">
+            <option value="due">Due</option>
+            <option value="homework">Homework</option>
+            <option value="project">Project</option>
+            <option value="chore">Chore</option>
+            <option value="other" selected>Other</option>
+          </select>
         </div>
         <div class="field">
+          <label class="label" for="task-due-input">Due date</label>
+          <input id="task-due-input" name="due_date" type="date" class="mono">
+        </div>
+        <div class="field field-cost" hidden>
           <label class="label" for="task-cost-input">Cost in ₹ (optional)</label>
           <input id="task-cost-input" name="cost" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" class="mono">
         </div>
@@ -127,6 +137,10 @@
             <option>Other</option>
           </select>
         </div>
+        <div class="field field-custom" hidden>
+          <label class="label" for="expense-custom-input">Category name</label>
+          <input id="expense-custom-input" name="custom_category" type="text" maxlength="40" autocomplete="off" placeholder="e.g. Gym fees">
+        </div>
         <div class="field">
           <label class="label" for="expense-date-input">Date</label>
           <input id="expense-date-input" name="spent_on" type="date" class="mono">
@@ -185,6 +199,7 @@
       <input class="task-check" type="checkbox">
       <span class="task-title"></span>
       <span class="task-meta">
+        <span class="task-kind"></span>
         <span class="sr-only">Due </span><span class="task-due mono"></span>
         <span class="task-cost-wrap"><span class="sr-only">Cost </span><span class="task-cost mono"></span></span>
       </span>

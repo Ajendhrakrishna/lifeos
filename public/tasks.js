@@ -5,6 +5,9 @@ const root = $('#tasks');
 const form = $('#task-form');
 const list = $('#task-list');
 let loaded = false; // false until the first successful load
+const costField = $('.field-cost', form);
+// 'homework' -> 'Homework', taken from the Kind dropdown so the names live in one place
+const kindNames = Object.fromEntries([...form.elements.kind.options].map((o) => [o.value, o.text]));
 
 // All text from the server goes in with textContent, never innerHTML.
 
@@ -15,6 +18,7 @@ function taskItem(task) {
   check.checked = task.done;
   check.setAttribute('aria-label', `Done: ${task.title}`);
   $('.task-title', li).textContent = task.title;
+  $('.task-kind', li).textContent = kindNames[task.kind] ?? '';
   $('.task-due', li).textContent = formatDate(task.due_date);
   const hasCost = task.cost !== null;
   $('.task-cost-wrap', li).hidden = !hasCost;
@@ -42,13 +46,14 @@ form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = $('button[type="submit"]', form);
   const f = form.elements;
-  const cost = f.cost.value.trim();
+  const kind = f.kind.value;
+  const cost = kind === 'due' ? f.cost.value.trim() : '';
   button.disabled = true;
   showNotice(root, '');
   try {
     await api('/tasks', {
       method: 'POST',
-      body: { title: f.title.value, due_date: f.due_date.value, cost: cost || undefined },
+      body: { title: f.title.value, due_date: f.due_date.value, kind, cost: cost || undefined },
     });
     f.title.value = '';
     f.cost.value = '';
@@ -92,6 +97,14 @@ $('.retry', root).addEventListener('click', () => {
   loaded = false;
   load();
 });
+
+// Only "Due" tasks (bills, fees) have a cost, so the box only shows for them
+function syncCost() {
+  costField.hidden = form.elements.kind.value !== 'due';
+  if (costField.hidden) form.elements.cost.value = '';
+}
+form.elements.kind.addEventListener('change', syncCost);
+syncCost(); // the browser may have restored a choice on reload
 
 form.elements.due_date.value = todayString();
 load();

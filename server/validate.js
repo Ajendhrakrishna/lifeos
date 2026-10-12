@@ -1,7 +1,9 @@
 // Checks for data coming from the browser. Each returns an error message or null.
 
-// Keep in step with the category dropdown in public/index.html
-export const CATEGORIES = ['Food', 'Transport', 'Bills', 'Shopping', 'Health', 'Fun', 'Other'];
+// Keep both lists in step with the dropdowns in public/index.html
+export const KINDS = ['due', 'homework', 'project', 'chore', 'other'];
+// The fixed expense categories. Picking "Other" lets the user type their own label instead.
+export const CATEGORIES = ['Food', 'Transport', 'Bills', 'Shopping', 'Health', 'Fun'];
 
 export function dateError(value, name) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -50,13 +52,17 @@ export function validateTask(body = {}) {
   const err = dateError(body.due_date, 'due_date');
   if (err) return { error: err };
 
+  const kind = body.kind ?? 'other';
+  if (!KINDS.includes(kind)) return { error: `kind must be one of: ${KINDS.join(', ')}` };
+
   let cost = null;
   if (body.cost !== undefined && body.cost !== null && body.cost !== '') {
+    if (kind !== 'due') return { error: 'only tasks of kind "due" can have a cost' };
     cost = toMoney(body.cost);
     if (!(cost >= 0)) return { error: 'cost must be 0 or more' };
   }
 
-  return { value: { title, due_date: body.due_date, cost } };
+  return { value: { title, due_date: body.due_date, kind, cost } };
 }
 
 export function validateBudget(body = {}) {
@@ -71,10 +77,12 @@ export function validateExpense(body = {}) {
   const amount = toMoney(body.amount);
   // 0.01 is the smallest we can store; 0.004 would round to 0
   if (!(amount >= 0.01)) return { error: 'amount must be more than 0' };
-  if (!CATEGORIES.includes(body.category)) {
-    return { error: `category must be one of: ${CATEGORIES.join(', ')}` };
+  // One of CATEGORIES, or the user's own label. Both are just text of 1 to 40 characters.
+  const category = typeof body.category === 'string' ? body.category.trim() : '';
+  if (category.length < 1 || category.length > 40) {
+    return { error: 'category must be 1 to 40 characters' };
   }
   const err = dateError(body.spent_on, 'spent_on');
   if (err) return { error: err };
-  return { value: { amount, category: body.category, spent_on: body.spent_on } };
+  return { value: { amount, category, spent_on: body.spent_on } };
 }
