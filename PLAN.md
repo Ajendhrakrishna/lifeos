@@ -15,8 +15,8 @@ Stack: Node.js + Express (backend), Supabase Postgres (database), plain HTML/CSS
 
 | Question | v1 answer |
 |---|---|
-| What is "this week"? | Tasks not done, due from today through the next 6 days (7 days in total). |
-| What are "upcoming tasks" for the warning? | Tasks not done that have a cost and are due from today to the end of this month. That matches the budget, which is per month. |
+| What is "this week"? | Tasks not done, of any kind, due from today through the next 6 days (7 days in total). |
+| What are "upcoming tasks" for the warning? | Tasks not done, of kind "due", with a cost, due from today to the end of this month. That matches the budget, which is per month. |
 | Budget: one number forever, or one per month? | One per month (`2026-10` → 500.00). If no budget is set for the month, the dashboard says "No budget set". |
 | Expense categories | A fixed list in a dropdown: Food, Transport, Bills, Shopping, Health, Fun, Other. Stored as text, so the list can change later without touching the database. |
 | One page or many? | One page (`index.html`) with three sections: Dashboard, Tasks, Money. |
@@ -162,7 +162,13 @@ PATCH and DELETE. An unknown id gives 404.
 **Commit:** `Add expenses`
 
 ### Step 8: Dashboard calculation and tests
-`server/summary.js` (pure function: takes tasks, expenses, budget and today, returns the numbers) and `test/summary.test.js`. Cases to cover: a week that crosses into next month, tasks already done (ignored), tasks with no cost, no budget set, and the warning exactly at the limit (equal is **not** a warning; more than is).
+`server/summary.js` (pure function: takes tasks, expenses, budget and today, returns plain numbers, no formatting or ₹) and `test/summary.test.js`.
+- **tasksDueThisWeek:** tasks not done, any kind, due from today through the next 6 days, soonest first.
+- **upcomingTaskCost:** tasks not done, kind "due", with a cost, due from today to the end of this month.
+- **spentThisMonth:** expenses dated in today's month. **budget:** this month's budget or none. **budgetRemaining:** budget minus spent (can be negative), none if no budget.
+- **overBudgetWarning:** only when upcomingTaskCost is more than budgetRemaining (equal is **not** a warning). No budget set means no warning.
+
+Cases to cover: a week that crosses into next month (and next year), tasks already done (ignored), tasks with no cost, a Homework task (in the week, adds no cost), costs after this month (not counted), overdue tasks (not counted), no budget set, a budget of 0, and the warning exactly at the limit.
 **Test:** `npm test`, all passing.
 **Commit:** `Add dashboard calculation with tests`
 
