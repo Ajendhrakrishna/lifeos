@@ -10,7 +10,7 @@
   --terracotta: #A5472F; /* money problems only; unused until the dashboard */
 
   --gold-metal: linear-gradient(135deg, var(--gold), var(--gold-light) 50%, var(--gold));
-  --gold-text: linear-gradient(135deg, var(--gold-light), var(--gold));
+  --gold-text: linear-gradient(135deg, #C9A24F, #8F6E2E); /* wordmark "OS" only */
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, "SF Mono", Consolas, "Liberation Mono", monospace;
@@ -60,6 +60,13 @@ body {
   padding: 32px 0 24px;
 }
 .wordmark { margin: 0; font: 700 3rem/1 var(--serif); letter-spacing: 0.02em; color: var(--espresso); }
+/* Our serif fonts stop at bold, so a thin stroke adds the extra weight */
+.wordmark .life {
+  display: inline-block;
+  font-weight: 800;
+  -webkit-text-stroke: 0.6px var(--espresso);
+  filter: drop-shadow(0 1px 2px rgba(42, 31, 26, 0.5));
+}
 /* Large metallic text. The shadow is a filter because text-shadow would show through the clipped gradient. */
 .wordmark .os {
   display: inline-block;
@@ -67,7 +74,7 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 1px 1px rgba(42, 31, 26, 0.35));
+  filter: drop-shadow(0 1px 2px rgba(42, 31, 26, 0.5));
 }
 
 .nav { display: flex; gap: 24px; }

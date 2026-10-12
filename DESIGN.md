@@ -15,7 +15,7 @@ Warm, luxurious, calm. Cream marble, frosted cards, metallic champagne gold. Sim
 | Warning | Terracotta | #A5472F |
 
 - Define each as a CSS variable once; never hard-code hex elsewhere.
-- Metallic gold = gradient between #B8934A and #E6D2A0, used for borders, rules, buttons, the active nav underline and the wordmark.
+- Metallic gold = gradient between #B8934A and #E6D2A0, used for borders, rules, buttons and the active nav underline.
 - On Espresso, text is Cream Alabaster and labels are Light Gold (Taupe is too dim there).
 
 ## Surfaces
@@ -33,7 +33,7 @@ Warm, luxurious, calm. Cream marble, frosted cards, metallic champagne gold. Sim
 
 ## Header and navigation
 
-- **Wordmark**, top left, large serif: "Life" in Rich Espresso, "OS" in metallic gold (gradient #E6D2A0 to #B8934A) with a soft drop shadow so the pale end stays readable.
+- **Wordmark**, top left, large serif: "Life" in Rich Espresso, extra heavy (bold plus a thin espresso stroke); "OS" in a rich metallic gold (gradient #C9A24F to #8F6E2E). Both share one soft drop shadow so they read clearly on cream.
 - **Nav**, top right: "Tasks" and "Money" as plain text links, Charcoal, uppercase labels. The active one has a 2px metallic gold underline and `aria-current="page"`.
 - Only one section shows at a time. The URL hash picks it (#tasks, #money), so a refresh stays put. Default is Tasks; an unknown hash falls back to Tasks.
 - On phones the header wraps: wordmark first, nav beneath if it does not fit.
