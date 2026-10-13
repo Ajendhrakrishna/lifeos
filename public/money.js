@@ -122,7 +122,7 @@ dialog.addEventListener('close', () => menuButton.focus()); // Esc and Cancel bo
 onSubmit(
   budgetForm,
   async (f) => {
-    await api('/budget', { method: 'PUT', body: { month: currentMonth(), amount: f.amount.value.trim() } });
+    await api('/budget', { method: 'PUT', body: { month: shownMonth, amount: f.amount.value.trim() } });
     dialog.close();
   },
   dialog,

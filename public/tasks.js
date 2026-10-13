@@ -71,6 +71,7 @@ list.addEventListener('change', async (event) => {
   const check = event.target;
   if (!check.matches('.task-check')) return;
   showNotice(root, '');
+  check.disabled = true; // no second click until this save is finished
   try {
     await api(`/tasks/${check.closest('.task').dataset.id}`, { method: 'PATCH', body: { done: check.checked } });
     announceChange();
@@ -78,6 +79,8 @@ list.addEventListener('change', async (event) => {
   } catch (err) {
     check.checked = !check.checked; // put it back, the server said no
     showNotice(root, err.message);
+  } finally {
+    check.disabled = false;
   }
 });
 

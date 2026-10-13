@@ -1,4 +1,5 @@
 import express from 'express';
+import { join } from 'node:path';
 import { supabase } from './supabase.js';
 import { forUser } from './user.js';
 import tasksRouter from './routes/tasks.js';
@@ -11,7 +12,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(join(import.meta.dirname, '..', 'public')));
 
 app.get('/api/health', async (req, res) => {
   const { error } = await forUser(supabase.from('tasks').select('id'), req).limit(1);

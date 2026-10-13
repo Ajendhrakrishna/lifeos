@@ -5,6 +5,7 @@ const root = $('#home');
 const content = $('.home-content', root);
 let loaded = false; // false until the first successful load
 let shownDay = null; // the "today" the week on screen starts from
+let latest = 0; // number of the newest load; an older one that answers late is ignored
 
 // 'homework' -> 'Homework', from the Tasks form's Kind dropdown so the names live in one place
 const kindNames = Object.fromEntries([...$('#task-kind-input').options].map((o) => [o.value, o.text]));
@@ -120,15 +121,19 @@ async function load() {
     setState(root, 'loading');
     content.hidden = true;
   }
+  const run = ++latest;
   const today = todayString();
-  shownDay = today;
   try {
-    render(await api(`/dashboard?today=${today}`), today);
+    const summary = await api(`/dashboard?today=${today}`);
+    if (run !== latest) return;
+    render(summary, today);
+    shownDay = today; // only once it is on screen, so a failed load is retried on the next focus
     setState(root, null);
     showNotice(root, '');
     content.hidden = false;
     loaded = true;
   } catch (err) {
+    if (run !== latest) return;
     if (loaded) return showNotice(root, `Couldn't refresh your week. ${err.message}`);
     $('.state-error-text', root).textContent = `Couldn't load your week. ${err.message}`;
     setState(root, 'error');

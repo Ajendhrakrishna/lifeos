@@ -10,8 +10,10 @@ export function dateError(value, name) {
     return `${name} must be a date like 2026-10-31`;
   }
   const d = new Date(`${value}T00:00:00Z`);
-  // Catches impossible dates such as 2026-02-31, and year 0000, which Postgres does not have
-  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value || value.startsWith('0000')) {
+  // Catches impossible dates such as 2026-02-31, year 0000 (Postgres has none),
+  // and years past 9000, where adding a week could run past year 9999
+  const year = Number(value.slice(0, 4));
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value || year === 0 || year > 9000) {
     return `${name} is not a real date`;
   }
   return null;
@@ -52,10 +54,10 @@ function toMoney(raw) {
 export function validateTask(body = {}) {
   const title = typeof body.title === 'string' ? body.title.trim() : '';
   if (title.length < 1 || title.length > 200) {
-    return { error: 'title is required and must be 1 to 200 characters' };
+    return { error: 'Please type a task (up to 200 characters)' };
   }
 
-  const err = dateError(body.due_date, 'due_date');
+  const err = dateError(body.due_date, 'Due date');
   if (err) return { error: err };
 
   const kind = body.kind ?? 'other';
@@ -65,7 +67,7 @@ export function validateTask(body = {}) {
   if (body.cost !== undefined && body.cost !== null && body.cost !== '') {
     if (kind !== 'due') return { error: 'only tasks of kind "due" can have a cost' };
     cost = toMoney(body.cost);
-    if (!(cost >= 0)) return { error: 'cost must be 0 or more, with up to 2 decimals' };
+    if (!(cost >= 0)) return { error: 'Cost must be 0 or more, with up to 2 decimals' };
   }
 
   return { value: { title, due_date: body.due_date, kind, cost } };
@@ -75,19 +77,19 @@ export function validateBudget(body = {}) {
   const err = monthError(body.month);
   if (err) return { error: err };
   const amount = toMoney(body.amount);
-  if (!(amount >= 0)) return { error: 'amount must be 0 or more, with up to 2 decimals' };
+  if (!(amount >= 0)) return { error: 'Budget must be 0 or more, with up to 2 decimals' };
   return { value: { month: body.month, amount } };
 }
 
 export function validateExpense(body = {}) {
   const amount = toMoney(body.amount);
-  if (!(amount >= 0.01)) return { error: 'amount must be more than 0, with up to 2 decimals' };
+  if (!(amount >= 0.01)) return { error: 'Amount must be more than 0, with up to 2 decimals' };
   // One of CATEGORIES, or the user's own label. Both are just text of 1 to 40 characters.
   const category = typeof body.category === 'string' ? body.category.trim() : '';
   if (category.length < 1 || category.length > 40) {
-    return { error: 'category must be 1 to 40 characters' };
+    return { error: 'Category must be 1 to 40 characters' };
   }
-  const err = dateError(body.spent_on, 'spent_on');
+  const err = dateError(body.spent_on, 'Date');
   if (err) return { error: err };
   return { value: { amount, category, spent_on: body.spent_on } };
 }

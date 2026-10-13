@@ -163,3 +163,25 @@ test('dates: year 0000 is rejected, year 0001 is fine', () => {
   assert.equal(dateError('0001-01-01', 'd'), null);
   assert.ok(validateExpense({ amount: 1, category: 'Food', spent_on: '0000-06-15' }).error);
 });
+
+// Review item 10: a week after 9999-12-30 is past year 9999, so far-future years are refused
+test('dates: years past 9000 are rejected', () => {
+  assert.equal(dateError('9000-12-31', 'd'), null);
+  assert.ok(dateError('9001-01-01', 'd'));
+  assert.ok(dateError('9999-12-30', 'd'));
+});
+
+// Review item 6: messages the user sees name the field in plain words, not code names
+test('error messages use plain field names', () => {
+  assert.match(validateTask({ title: 'a', due_date: '' }).error, /^Due date /);
+  assert.match(validateExpense({ amount: 1, category: 'Food', spent_on: '' }).error, /^Date /);
+  for (const error of [
+    validateTask({ title: '', due_date: '2026-10-31' }).error,
+    validateTask({ title: 'a', due_date: '2026-10-31', kind: 'due', cost: 'x' }).error,
+    validateBudget({ month: '2026-10', amount: 'x' }).error,
+    validateExpense({ amount: 'x', category: 'Food', spent_on: '2026-10-12' }).error,
+    validateExpense({ amount: 1, category: '', spent_on: '2026-10-12' }).error,
+  ]) {
+    assert.doesNotMatch(error, /due_date|spent_on|^[a-z]/, error);
+  }
+});
