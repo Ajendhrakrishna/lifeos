@@ -179,24 +179,38 @@ input.mono { font-family: var(--mono); }
 .headline { margin: 0 0 16px; font: 600 1.5rem/1.3 var(--serif); overflow-wrap: anywhere; }
 
 /* Warning banners: frosted cream tinted with their colour */
-.banners { display: grid; gap: 12px; margin-bottom: 24px; }
+.banners { display: grid; gap: 16px; margin-bottom: 24px; }
 .banners:empty { display: none; }
 .banner {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin: 0;
-  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 20px 24px;
+  font-size: 1.0625rem; /* about 17px */
   color: var(--charcoal);
-  background: color-mix(in srgb, var(--tint) 10%, rgba(247, 240, 226, 0.85));
+  background: color-mix(in srgb, var(--tint) 20%, rgba(247, 240, 226, 0.92));
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid color-mix(in srgb, var(--tint) 35%, transparent);
-  border-left: 4px solid var(--tint);
-  border-radius: 12px;
+  border: 1px solid var(--tint);
+  border-left-width: 8px;
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 10px 28px color-mix(in srgb, var(--tint) 22%, transparent);
   overflow-wrap: anywhere;
 }
-.banner .icon { color: var(--tint); }
+.banner .icon { width: 32px; height: 32px; color: var(--tint); }
+.banner-body p { margin: 0; }
+.banner-title { font-weight: 700; }
+.banner-text { margin-top: 2px !important; }
+.banner-link {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--charcoal);
+  text-decoration-color: var(--tint);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
 .banner-amber { --tint: var(--amber); }
 .banner-terracotta { --tint: var(--terracotta); }
 
@@ -412,6 +426,8 @@ input.mono { font-family: var(--mono); }
   .figures { grid-template-columns: 1fr; }
   .ribbon { grid-auto-columns: 80%; } /* one day mostly visible, the next peeking in */
   .money-line { grid-template-columns: 1fr; }
+  .banner { grid-template-columns: auto 1fr; padding: 16px 18px; }
+  .banner-link { grid-column: 2; justify-self: start; }
   .money-line-side { justify-items: start; text-align: left; }
   .btn-gold, .expense-form .btn { width: 100%; }
 }

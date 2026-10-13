@@ -30,10 +30,16 @@ function headline(s, today) {
   return `${plural(week.length, 'task', 'tasks')} this week. Next up: ${next.title}, ${when(next.due_date, today)}.`;
 }
 
-function banner(colour, text) {
+// Overdue banners are amber and point to Tasks; money banners are terracotta and point to Money
+function banner(colour, title, text) {
   const el = clone('#banner-template');
   el.classList.add(`banner-${colour}`);
+  $('.banner-title', el).textContent = title;
   $('.banner-text', el).textContent = text;
+  const link = $('.banner-link', el);
+  const [label, href] = colour === 'amber' ? ['View tasks', '#tasks'] : ['Open money', '#money'];
+  link.textContent = label;
+  link.href = href;
   return el;
 }
 
@@ -44,13 +50,13 @@ function warnings(s) {
     const shown = late.slice(0, 3).map((t) => `${t.title} (${plural(t.daysOverdue, 'day', 'days')})`);
     if (late.length > 3) shown.push(`and ${late.length - 3} more`);
     const lead = late.length === 1 ? '1 task is overdue' : `${late.length} tasks are overdue`;
-    list.push(banner('amber', `${lead}: ${shown.join(', ')}`));
+    list.push(banner('amber', 'Overdue', `${lead}: ${shown.join(', ')}`));
   }
   if (s.overspentBy > 0) {
-    list.push(banner('terracotta', `You're ${formatMoney(s.overspentBy)} over budget this month`));
+    list.push(banner('terracotta', 'Over budget', `You're ${formatMoney(s.overspentBy)} over budget this month`));
   } else if (s.overBudgetWarning) {
     const short = Math.round((s.upcomingTaskCost - s.budgetRemaining) * 100) / 100;
-    list.push(banner('terracotta', `Upcoming dues cost ${formatMoney(s.upcomingTaskCost)}, ${formatMoney(short)} more than you have left`));
+    list.push(banner('terracotta', "Dues won't fit", `Upcoming dues cost ${formatMoney(s.upcomingTaskCost)}, ${formatMoney(short)} more than you have left`));
   }
   return list;
 }

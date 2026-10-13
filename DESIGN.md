@@ -46,7 +46,9 @@ No sidebar. Header and content share one centred column up to 1040px wide. Home 
 ## Home
 
 Top to bottom, every piece of text on a card or banner (never on bare marble):
-1. **Warnings**, only when there is a problem. Each is a banner: frosted cream tinted with its colour, a 4px left bar and a line warning icon in that colour, Charcoal text. Overdue tasks first, in Warm Amber ("2 tasks are overdue: Lab record (2 days), ..."). Then one money banner in Terracotta: "You're ₹X over budget this month", or else "Upcoming dues cost ₹X, ₹Y more than you have left".
+1. **Warnings**, only when there is a problem, and the most noticeable thing on the page. Each banner: frosted cream richly tinted (about 20%) with its colour, a 1px border and 8px left bar in that colour, a soft shadow of the same colour, a 32px line warning icon, about 17px Charcoal text in two lines (a bold short heading, then the detail), and a small link on the right underlined in its colour. On phones the link drops under the text.
+   - Overdue tasks first, in Warm Amber: "Overdue" / "2 tasks are overdue: Lab record (2 days), ..." / link "View tasks".
+   - Then one money banner in Terracotta: "Over budget" / "You're ₹X over budget this month", or else "Dues won't fit" / "Upcoming dues cost ₹X, ₹Y more than you have left". Link "Open money".
 2. **Week card**: one serif headline sentence summarising the week, then the **week ribbon**: 7 day tiles from today. Each tile shows the day and date, that day's tasks (kind label above each title), and that day's spending if any. Today's tile is Rich Espresso. Phones: the ribbon scrolls sideways, one day mostly visible and the next peeking in; it is keyboard-scrollable.
 3. **Money line card**: "Left to spend" as a big serif number, "₹X spent of ₹Y", and a metallic gold progress bar. Over budget: the bar is full and Terracotta.
 
