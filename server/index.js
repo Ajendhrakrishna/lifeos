@@ -1,5 +1,6 @@
 import express from 'express';
 import { supabase } from './supabase.js';
+import { forUser } from './user.js';
 import tasksRouter from './routes/tasks.js';
 import budgetRouter from './routes/budget.js';
 import expensesRouter from './routes/expenses.js';
@@ -13,10 +14,11 @@ app.use(express.json());
 app.use(express.static('public'));
 
 app.get('/api/health', async (req, res) => {
-  const { error } = await supabase.from('tasks').select('id').limit(1);
+  const { error } = await forUser(supabase.from('tasks').select('id'), req).limit(1);
   if (error) {
     console.error('Health check failed:', error);
-    return res.status(500).json({ ok: false, db: false, error: friendlyError(error).message });
+    const { status, message } = friendlyError(error);
+    return res.status(status).json({ ok: false, db: false, error: message });
   }
   res.json({ ok: true, db: true });
 });

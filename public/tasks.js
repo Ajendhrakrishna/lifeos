@@ -93,6 +93,7 @@ list.addEventListener('click', async (event) => {
   } catch (err) {
     button.disabled = false;
     showNotice(root, err.message);
+    load(); // the task may already be gone (deleted in another tab), so re-sync the list
   }
 });
 
@@ -109,5 +110,16 @@ function syncCost() {
 form.elements.kind.addEventListener('change', syncCost);
 syncCost(); // the browser may have restored a choice on reload
 
-form.elements.due_date.value = todayString();
+// After midnight: move the default due date on, unless the user picked one
+let defaultDate = todayString();
+function catchUp() {
+  const today = todayString();
+  if (today === defaultDate) return;
+  if (form.elements.due_date.value === defaultDate) form.elements.due_date.value = today;
+  defaultDate = today;
+}
+addEventListener('focus', catchUp);
+addEventListener('hashchange', catchUp);
+
+form.elements.due_date.value = defaultDate;
 load();

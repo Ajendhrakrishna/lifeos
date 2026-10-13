@@ -27,6 +27,11 @@ body {
   font: 1rem/1.5 var(--sans);
 }
 
+/* Marble colours live here, not in the SVG, so they follow the variables */
+.marble-cloud { fill: var(--taupe); }
+.vein { stroke: var(--taupe); }
+.vein-gold { stroke: var(--gold); }
+
 .marble {
   position: fixed;
   inset: 0;

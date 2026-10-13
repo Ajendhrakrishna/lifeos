@@ -11,7 +11,8 @@ router.param('id', (req, res, next, id) => {
   next();
 });
 
-// All tasks, soonest due first
+// All tasks, soonest due first.
+// shortcut: Supabase returns at most 1,000 rows per request, so a list longer than that is cut short; page through results if anyone gets near it.
 router.get('/', async (req, res) => {
   const { data, error } = await forUser(supabase.from('tasks').select('*'), req)
     .order('due_date')

@@ -13,14 +13,19 @@ router.get('/', async (req, res) => {
   if (problem) return res.status(400).json({ error: problem });
 
   const { start, end } = expenseWindow(today);
-  const [tasks, expenses, budget] = await Promise.all([
-    forUser(supabase.from('tasks').select('*'), req),
+  // Only open tasks are needed, which keeps us well under the API's 1,000-row page;
+  // the count of all tasks comes separately, without loading them
+  const [tasks, count, expenses, budget] = await Promise.all([
+    forUser(supabase.from('tasks').select('*').eq('done', false), req),
+    forUser(supabase.from('tasks').select('id', { count: 'exact', head: true }), req),
     forUser(supabase.from('expenses').select('amount, spent_on').gte('spent_on', start).lt('spent_on', end), req),
     forUser(supabase.from('budgets').select('amount').eq('month', `${today.slice(0, 7)}-01`), req).maybeSingle(),
   ]);
-  for (const result of [tasks, expenses, budget]) if (result.error) throw result.error;
+  for (const result of [tasks, count, expenses, budget]) if (result.error) throw result.error;
 
-  res.json(summarize({ tasks: tasks.data, expenses: expenses.data, budget: budget.data?.amount ?? null, today }));
+  res.json(
+    summarize({ tasks: tasks.data, taskCount: count.count, expenses: expenses.data, budget: budget.data?.amount ?? null, today }),
+  );
 });
 
 export default router;

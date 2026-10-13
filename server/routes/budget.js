@@ -23,14 +23,13 @@ router.put('/', async (req, res) => {
   const { value, error: problem } = validateBudget(req.body);
   if (problem) return res.status(400).json({ error: problem });
 
-  const { data: existing, error: findError } = await findBudget(value.month, req);
-  if (findError) throw findError;
-
-  const { error } = existing
-    ? await forUser(supabase.from('budgets').update({ amount: value.amount }).eq('id', existing.id), req)
-    : await supabase
-        .from('budgets')
-        .insert({ month: `${value.month}-01`, amount: value.amount, user_id: getUserId(req) });
+  // One upsert, so two saves at the same moment can't both try to insert
+  const { error } = await supabase
+    .from('budgets')
+    .upsert(
+      { month: `${value.month}-01`, amount: value.amount, user_id: getUserId(req) },
+      { onConflict: 'user_id,month' },
+    );
   if (error) throw error;
   res.json(value);
 });

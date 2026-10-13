@@ -18,6 +18,7 @@ test('nothing at all gives zeros, an empty week and no warning', () => {
     upcomingTaskCost: 0,
     overBudgetWarning: false,
     taskCount: 0,
+    duesShortBy: 0,
     overdueTasks: [],
     overspentBy: 0,
     spendingByDay: [
@@ -162,4 +163,17 @@ test('expenseWindow covers this month, and stretches when the week runs into nex
 test('taskCount counts every task, done or not, in any week', () => {
   const tasks = [task('2026-10-14'), task('2026-12-01'), task('2026-01-01', { done: true })];
   assert.equal(summarize({ tasks, expenses: [], budget: null, today: '2026-10-13' }).taskCount, 3);
+});
+
+test('duesShortBy is how much the upcoming dues exceed what is left, in exact paise', () => {
+  const s = summarize({ tasks: [bill('2026-10-20', 0.3)], expenses: [spent('2026-10-02', 99.9)], budget: 100, today: '2026-10-13' });
+  assert.equal(s.budgetRemaining, 0.1);
+  assert.equal(s.duesShortBy, 0.2); // 0.3 - 0.1 in plain decimals would be 0.19999999999999998
+  assert.equal(summarize({ tasks: [bill('2026-10-20', 5)], expenses: [], budget: null, today: '2026-10-13' }).duesShortBy, 0);
+  assert.equal(summarize({ tasks: [bill('2026-10-20', 40)], expenses: [spent('2026-10-02', 60)], budget: 100, today: '2026-10-13' }).duesShortBy, 0);
+});
+
+test('taskCount can be given separately, for when only open tasks are loaded', () => {
+  const s = summarize({ tasks: [task('2026-10-14')], taskCount: 12, expenses: [], budget: null, today: '2026-10-13' });
+  assert.equal(s.taskCount, 12);
 });

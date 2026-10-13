@@ -93,7 +93,7 @@ All responses are JSON. Errors look like `{ "error": "message" }`: 400 (your inp
 | POST | `/api/expenses` | `{ amount, category, spent_on }` | Records an expense |
 | GET | `/api/dashboard` | `?today=2026-10-13` | The Home numbers (below) |
 
-`/api/dashboard` returns `tasksDueThisWeek`, `overdueTasks` (each with `daysOverdue`), `taskCount`, `spentThisMonth`, `budget`, `budgetRemaining`, `overspentBy`, `upcomingTaskCost`, `overBudgetWarning` and `spendingByDay` (7 days from today). Plain numbers, no ₹.
+`/api/dashboard` returns `tasksDueThisWeek`, `overdueTasks` (each with `daysOverdue`), `taskCount`, `spentThisMonth`, `budget`, `budgetRemaining`, `overspentBy`, `upcomingTaskCost`, `overBudgetWarning`, `duesShortBy` (how much the upcoming dues exceed what is left, 0 if they fit) and `spendingByDay` (7 days from today). Plain numbers, no ₹.
 
 ## Database (`db/schema.sql`)
 

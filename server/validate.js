@@ -10,8 +10,8 @@ export function dateError(value, name) {
     return `${name} must be a date like 2026-10-31`;
   }
   const d = new Date(`${value}T00:00:00Z`);
-  // Catches impossible dates such as 2026-02-31
-  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value) {
+  // Catches impossible dates such as 2026-02-31, and year 0000, which Postgres does not have
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value || value.startsWith('0000')) {
     return `${name} is not a real date`;
   }
   return null;
@@ -34,12 +34,18 @@ export function monthBounds(month) {
   return { start: `${month}-01`, end };
 }
 
-// Money to 2 decimals, or NaN if it is not a usable number
+// The largest amount numeric(12,2) can hold, in paise
+const MAX_PAISE = 999999999999;
+
+// Money as a plain amount with up to 2 decimals ("120", "120.5", 120.5), or NaN.
+// Paise are worked out from the digits, never from n * 100, so 1.05 stays 1.05.
+// Hex, exponents, spaces, signs and a third decimal are refused rather than guessed at.
 function toMoney(raw) {
-  if (typeof raw !== 'number' && typeof raw !== 'string') return NaN;
-  if (typeof raw === 'string' && raw.trim() === '') return NaN;
-  const n = Number(raw);
-  return Number.isFinite(n) && Math.abs(n) < 1e10 ? Math.round(n * 100) / 100 : NaN;
+  const text = typeof raw === 'number' ? String(raw) : raw;
+  if (typeof text !== 'string' || !/^\d+(\.\d{1,2})?$/.test(text)) return NaN;
+  const [whole, fraction = ''] = text.split('.');
+  const paise = Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
+  return paise <= MAX_PAISE ? paise / 100 : NaN;
 }
 
 // Each validate function returns { value } with clean data, or { error } with a message.
@@ -59,7 +65,7 @@ export function validateTask(body = {}) {
   if (body.cost !== undefined && body.cost !== null && body.cost !== '') {
     if (kind !== 'due') return { error: 'only tasks of kind "due" can have a cost' };
     cost = toMoney(body.cost);
-    if (!(cost >= 0)) return { error: 'cost must be 0 or more' };
+    if (!(cost >= 0)) return { error: 'cost must be 0 or more, with up to 2 decimals' };
   }
 
   return { value: { title, due_date: body.due_date, kind, cost } };
@@ -69,14 +75,13 @@ export function validateBudget(body = {}) {
   const err = monthError(body.month);
   if (err) return { error: err };
   const amount = toMoney(body.amount);
-  if (!(amount >= 0)) return { error: 'amount must be 0 or more' };
+  if (!(amount >= 0)) return { error: 'amount must be 0 or more, with up to 2 decimals' };
   return { value: { month: body.month, amount } };
 }
 
 export function validateExpense(body = {}) {
   const amount = toMoney(body.amount);
-  // 0.01 is the smallest we can store; 0.004 would round to 0
-  if (!(amount >= 0.01)) return { error: 'amount must be more than 0' };
+  if (!(amount >= 0.01)) return { error: 'amount must be more than 0, with up to 2 decimals' };
   // One of CATEGORIES, or the user's own label. Both are just text of 1 to 40 characters.
   const category = typeof body.category === 'string' ? body.category.trim() : '';
   if (category.length < 1 || category.length > 40) {

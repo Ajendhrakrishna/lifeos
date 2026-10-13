@@ -3,8 +3,11 @@ import { $, todayString, formatMoney, formatDate, setState, showNotice, announce
 
 const root = $('#money');
 const list = $('#expense-list');
-const month = todayString().slice(0, 7); // 'YYYY-MM': the page always shows the current month
-const monthName = new Date(`${month}-01T00:00:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+// Money always shows the current month, worked out fresh each time (the tab may stay open for days)
+const currentMonth = () => todayString().slice(0, 7); // 'YYYY-MM'
+const nameOf = (month) => new Date(`${month}-01T00:00:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+let shownMonth = null; // the month on screen
+let defaultDate = todayString(); // what the expense date box starts at
 let loaded = false; // false until the first successful load
 let currentBudget = null; // the budget amount, to prefill the edit dialog
 
@@ -33,6 +36,10 @@ function render(budget, expenses) {
 }
 
 async function load() {
+  const month = currentMonth();
+  shownMonth = month;
+  $('#month-name').textContent = nameOf(month);
+  $('#dialog-month').textContent = nameOf(month);
   if (!loaded) setState(root, 'loading');
   try {
     const [budget, expenses] = await Promise.all([
@@ -115,7 +122,7 @@ dialog.addEventListener('close', () => menuButton.focus()); // Esc and Cancel bo
 onSubmit(
   budgetForm,
   async (f) => {
-    await api('/budget', { method: 'PUT', body: { month, amount: f.amount.value.trim() } });
+    await api('/budget', { method: 'PUT', body: { month: currentMonth(), amount: f.amount.value.trim() } });
     dialog.close();
   },
   dialog,
@@ -141,8 +148,8 @@ onSubmit(expenseForm, async (f) => {
   f.amount.value = '';
   f.amount.focus();
   // The list only shows this month, so say where an older or later expense went
-  if (!spentOn.startsWith(month)) {
-    showNotice(root, `Saved, but it is not in ${monthName}, so it is not listed here.`);
+  if (!spentOn.startsWith(currentMonth())) {
+    showNotice(root, `Saved, but it is not in ${nameOf(currentMonth())}, so it is not listed here.`);
   }
 });
 
@@ -151,7 +158,18 @@ $('.retry', root).addEventListener('click', () => {
   load();
 });
 
-$('#month-name').textContent = monthName;
-$('#dialog-month').textContent = monthName;
-$('#expense-form').elements.spent_on.value = todayString();
+// After midnight: move the default date on (unless the user picked one) and show the new month
+function catchUp() {
+  const today = todayString();
+  const dateBox = expenseForm.elements.spent_on;
+  if (today !== defaultDate) {
+    if (dateBox.value === defaultDate) dateBox.value = today;
+    defaultDate = today;
+  }
+  if (currentMonth() !== shownMonth) load();
+}
+addEventListener('focus', catchUp);
+addEventListener('hashchange', catchUp);
+
+expenseForm.elements.spent_on.value = defaultDate;
 load();

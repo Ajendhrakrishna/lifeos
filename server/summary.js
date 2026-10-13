@@ -16,7 +16,8 @@ function addDays(iso, days) {
 
 // tasks: [{ due_date, kind, cost, done, ... }], expenses: [{ amount, spent_on }], budget: amount or null.
 // Expenses may include days after this month (the week can run into next month); only this month counts as spent.
-export function summarize({ tasks, expenses, budget, today }) {
+// taskCount: how many tasks exist in total (defaults to tasks.length when all tasks are passed in)
+export function summarize({ tasks, expenses, budget, today, taskCount = tasks.length }) {
   // ISO dates compare correctly as text: '2026-10-31' < '2026-11-01'
   const weekEnd = addDays(today, 6);
   const { start: monthStart, end: nextMonthStart } = monthBounds(today.slice(0, 7));
@@ -57,7 +58,9 @@ export function summarize({ tasks, expenses, budget, today }) {
     upcomingTaskCost: upcomingPaise / 100,
     // More than what is left warns; exactly equal does not. No budget, no warning.
     overBudgetWarning: hasBudget && upcomingPaise > remainingPaise,
-    taskCount: tasks.length, // done or not; 0 means the user has no tasks at all
+    taskCount, // done or not; 0 means the user has no tasks at all
+    // How much the upcoming dues exceed what is left (0 if they fit or there is no budget)
+    duesShortBy: hasBudget && upcomingPaise > remainingPaise ? (upcomingPaise - remainingPaise) / 100 : 0,
     overdueTasks,
     overspentBy: hasBudget && remainingPaise < 0 ? -remainingPaise / 100 : 0,
     spendingByDay,

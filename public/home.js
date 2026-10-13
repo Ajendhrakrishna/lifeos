@@ -4,6 +4,7 @@ import { $, todayString, formatMoney, formatDate, setState, showNotice } from '.
 const root = $('#home');
 const content = $('.home-content', root);
 let loaded = false; // false until the first successful load
+let shownDay = null; // the "today" the week on screen starts from
 
 // 'homework' -> 'Homework', from the Tasks form's Kind dropdown so the names live in one place
 const kindNames = Object.fromEntries([...$('#task-kind-input').options].map((o) => [o.value, o.text]));
@@ -56,8 +57,7 @@ function warnings(s) {
   if (s.overspentBy > 0) {
     list.push(banner('terracotta', 'Over budget', `You're ${formatMoney(s.overspentBy)} over budget this month`));
   } else if (s.overBudgetWarning) {
-    const short = Math.round((s.upcomingTaskCost - s.budgetRemaining) * 100) / 100;
-    list.push(banner('terracotta', "Dues won't fit", `Upcoming dues cost ${formatMoney(s.upcomingTaskCost)}, ${formatMoney(short)} more than you have left`));
+    list.push(banner('terracotta', "Dues won't fit", `Upcoming dues cost ${formatMoney(s.upcomingTaskCost)}, ${formatMoney(s.duesShortBy)} more than you have left`));
   }
   return list;
 }
@@ -121,6 +121,7 @@ async function load() {
     content.hidden = true;
   }
   const today = todayString();
+  shownDay = today;
   try {
     render(await api(`/dashboard?today=${today}`), today);
     setState(root, null);
@@ -140,4 +141,8 @@ $('.retry', root).addEventListener('click', () => {
 });
 // Any task, budget or expense change elsewhere on the page
 document.addEventListener('lifeos:change', load);
+// The tab may stay open past midnight: when the user comes back, start the week from the new today
+const catchUp = () => todayString() !== shownDay && load();
+addEventListener('focus', catchUp);
+addEventListener('hashchange', catchUp);
 load();

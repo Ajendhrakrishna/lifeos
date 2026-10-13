@@ -7,6 +7,7 @@ import {
   monthError,
   monthBounds,
   isUuid,
+  dateError,
   KINDS,
   CATEGORIES,
 } from '../server/validate.js';
@@ -17,7 +18,7 @@ test('isUuid accepts real ids and rejects made-up ones', () => {
 });
 
 test('accepts a good task and trims the title', () => {
-  const r = validateTask({ title: '  Pay rent ', due_date: '2026-10-31', kind: 'due', cost: '12.345' });
+  const r = validateTask({ title: '  Pay rent ', due_date: '2026-10-31', kind: 'due', cost: '12.35' });
   assert.deepEqual(r.value, { title: 'Pay rent', due_date: '2026-10-31', kind: 'due', cost: 12.35 });
 });
 
@@ -73,9 +74,9 @@ test('budget: accepts 0 and decimals, rejects bad month or amount', () => {
   for (const body of bad) assert.ok(validateBudget(body).error, JSON.stringify(body));
 });
 
-test('expense: accepts a good one and rounds to cents', () => {
-  const r = validateExpense({ amount: '99.999', category: 'Food', spent_on: '2026-10-12' });
-  assert.deepEqual(r.value, { amount: 100, category: 'Food', spent_on: '2026-10-12' });
+test('expense: accepts a good one with up to 2 decimals', () => {
+  const r = validateExpense({ amount: '99.99', category: 'Food', spent_on: '2026-10-12' });
+  assert.deepEqual(r.value, { amount: 99.99, category: 'Food', spent_on: '2026-10-12' });
 });
 
 test('expense: every listed category is accepted', () => {
@@ -132,4 +133,33 @@ test('expense: a custom category is trimmed and stored as typed, up to 40 charac
   assert.equal(validateExpense({ ...ok, category: 'Other' }).value.category, 'Other');
   assert.equal(validateExpense({ ...ok, category: 'x'.repeat(40) }).value.category.length, 40);
   assert.ok(validateExpense({ ...ok, category: ' ' + 'x'.repeat(41) }).error);
+});
+
+// Review item 3: money must look like money, and is worked out from its digits
+test('money: only plain amounts with up to 2 decimals are accepted', () => {
+  const ok = { category: 'Food', spent_on: '2026-10-12' };
+  const amountOf = (amount) => validateExpense({ ...ok, amount }).value?.amount;
+  for (const bad of ['0x10', '1e3', ' 12 ', '12.', '.5', '1,000', '12.345', 1.005, '-5', 1e21, 5e-7]) {
+    assert.equal(amountOf(bad), undefined, JSON.stringify(bad));
+  }
+  assert.equal(amountOf('12'), 12);
+  assert.equal(amountOf('1.05'), 1.05);
+  assert.equal(amountOf(1.05), 1.05);
+  assert.equal(amountOf('007.50'), 7.5);
+});
+
+test('money: the largest amount the database can hold is accepted, one paisa more is not', () => {
+  const ok = { category: 'Food', spent_on: '2026-10-12' };
+  assert.equal(validateExpense({ ...ok, amount: '9999999999.99' }).value.amount, 9999999999.99);
+  for (const big of ['10000000000', '10000000000.00', '9999999999.996', 1e10]) {
+    assert.ok(validateExpense({ ...ok, amount: big }).error, String(big));
+  }
+  assert.ok(validateBudget({ month: '2026-10', amount: '10000000000' }).error);
+});
+
+// Review item 7: Postgres has no year 0
+test('dates: year 0000 is rejected, year 0001 is fine', () => {
+  assert.ok(dateError('0000-01-01', 'd'));
+  assert.equal(dateError('0001-01-01', 'd'), null);
+  assert.ok(validateExpense({ amount: 1, category: 'Food', spent_on: '0000-06-15' }).error);
 });
