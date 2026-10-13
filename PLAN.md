@@ -56,6 +56,7 @@ lifeos/
 │   ├── user.js           getUserId(req) and forUser(query, req): v1 = rows with no user
 │   ├── validate.js       Checks for tasks, budgets, expenses, dates, months and ids
 │   ├── summary.js        Pure function for the Home numbers, plus the date window it needs
+│   ├── host.js           Refuses requests not addressed to localhost or 127.0.0.1 (403)
 │   ├── errors.js         Turns any server error into a friendly message (database down, wrong key, missing migration); in production only a general one
 │   └── routes/
 │       ├── tasks.js      GET, POST, PATCH (done), DELETE /api/tasks
@@ -73,7 +74,7 @@ lifeos/
 │   ├── tasks.js          Task form (Kind, Due date, Cost for Due), list, done, delete
 │   └── money.js          Budget menu and dialog, expense form (custom category), this month's list
 │
-└── test/                 Node's built-in test runner: validate, summary and errors
+└── test/                 Node's built-in test runner: validate, summary, errors, routes and host
 ```
 
 ## API
@@ -132,3 +133,6 @@ Each step was tested and committed on its own.
 2. `server/user.js` checks the token and returns the real user id. All routes already filter by it.
 3. Make `user_id` required and linked to `auth.users`, in a new migration. Add RLS policies so each user sees only their own rows.
 4. Decide what happens to v1 rows with no `user_id` (for example, give them to your own account).
+5. **Deploy**, only after login works. v1 is never deployed: it has no login, so anyone with the address could see and change all data.
+   - Add the real domain to `ALLOWED` in `server/host.js`, and listen on all addresses instead of `127.0.0.1` in `server/index.js`.
+   - Set `NODE_ENV=production` on the server, so visitors see only a general error message and full details go to the server log.

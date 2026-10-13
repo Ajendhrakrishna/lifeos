@@ -7,10 +7,12 @@ import budgetRouter from './routes/budget.js';
 import expensesRouter from './routes/expenses.js';
 import dashboardRouter from './routes/dashboard.js';
 import { friendlyError } from './errors.js';
+import { localOnly } from './host.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.use(localOnly); // first, so pages and /api are both protected
 app.use(express.json());
 app.use(express.static(join(import.meta.dirname, '..', 'public')));
 

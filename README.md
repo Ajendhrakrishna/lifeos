@@ -68,7 +68,9 @@ If the page says "The database is missing an update", a migration has not been r
 
 ## Deploying
 
-When you deploy LifeOS anywhere other than your own computer, **set the environment variable `NODE_ENV=production`** on the server. Visitors then only see a general message ("LifeOS is having trouble right now…"), never details such as key names, files or database tables. The full error is always written to the server's log.
+**Do not put v1 online.** It has no login, so anyone with the address could see and change all data. Deployment comes in v2, after login. Until then the server only answers on this computer (`localhost` or `127.0.0.1`).
+
+For later (v2): when LifeOS runs anywhere other than your own computer, **set the environment variable `NODE_ENV=production`** on the server. Visitors then only see a general message ("LifeOS is having trouble right now…"), never details such as key names, files or database tables. The full error is always written to the server's log.
 
 ## When something goes wrong
 
