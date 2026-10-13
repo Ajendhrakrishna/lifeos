@@ -57,6 +57,7 @@ export function summarize({ tasks, expenses, budget, today }) {
     upcomingTaskCost: upcomingPaise / 100,
     // More than what is left warns; exactly equal does not. No budget, no warning.
     overBudgetWarning: hasBudget && upcomingPaise > remainingPaise,
+    taskCount: tasks.length, // done or not; 0 means the user has no tasks at all
     overdueTasks,
     overspentBy: hasBudget && remainingPaise < 0 ? -remainingPaise / 100 : 0,
     spendingByDay,

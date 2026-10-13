@@ -1,28 +1,36 @@
-# LifeOS: Version 1 Plan
+# LifeOS: Version 1 Plan (as built)
 
 A personal management app that connects tasks and money.
 Stack: Node.js + Express (backend), Supabase Postgres (database), plain HTML/CSS/JS (frontend).
+This file describes what version 1 actually is. The look is in [DESIGN.md](DESIGN.md); setup is in [README.md](README.md).
 
 ## Ground rules
 
 - **Only the backend talks to Supabase.** The browser only calls our own `/api/...` routes.
-- **Secrets live in `.env`**, which is listed in `.gitignore` and never committed. A `.env.example` with blank values *is* committed so you remember which variables you need.
-- **Built ready for login later.** Every table has a `user_id` column, and the backend gets "who is the user" from one function (`server/user.js`). In v1 that function returns no user. In v2 it will read the logged-in user, and nothing else needs to change shape.
-- **Money is stored as `numeric(12,2)`**, never as a floating-point number, so 0.1 + 0.2 stays 0.30.
-- **Dates are plain `YYYY-MM-DD` values** (Postgres `date`). The browser sends its own "today" to the dashboard so "this week" and "this month" match your time zone, not the server's.
+- **Secrets live in `.env`**, which is in `.gitignore` and never committed. `.env.example` (blank values) is committed.
+- **Ready for login later.** Every table has a `user_id` column, and every route asks one function, `getUserId(req)` in `server/user.js`, who the user is. In v1 the answer is "nobody" (`null`).
+- **Money is `numeric(12,2)`** in the database and is added up in whole paise in code, so 0.1 + 0.2 stays 0.30. Shown with ₹ and Indian grouping (₹1,23,456.79).
+- **Dates are plain `YYYY-MM-DD`.** The browser sends its own "today", so "this week" and "this month" follow the user's time zone.
+- **Validation happens twice:** in `server/validate.js` (friendly messages) and as database checks (a safety net).
+- **User text is shown with `textContent` only**, never `innerHTML`.
+- In production (NODE_ENV=production), users see only a general error message; full details go to the server log.
 
-## Decisions I made for you (change them now if you disagree)
+## Decisions
 
 | Question | v1 answer |
 |---|---|
-| What is "this week"? | Tasks not done, of any kind, due from today through the next 6 days (7 days in total). |
-| What are "upcoming tasks" for the warning? | Tasks not done, of kind "due", with a cost, due from today to the end of this month. That matches the budget, which is per month. |
-| Budget: one number forever, or one per month? | One per month (`2026-10` → 500.00). If no budget is set for the month, the dashboard says "No budget set". |
-| Expense categories | A fixed list in a dropdown: Food, Transport, Bills, Shopping, Health, Fun, Other. Stored as text, so the list can change later without touching the database. |
-| One page or many? | One page (`index.html`) with three sections: Dashboard, Tasks, Money. |
-| Do I need `dotenv`? | No. Node 20.6+ can load `.env` itself with `node --env-file=.env`. |
+| Sections | One page, three sections chosen by the URL hash: Home (`#home`, the default), Tasks (`#tasks`), Money (`#money`). |
+| Task kinds | Due, Homework, Project, Chore, Other (default). Only **Due** tasks can have a cost. |
+| What is "this week"? | Tasks not done, any kind, due from today through the next 6 days. |
+| Overdue | Tasks not done, due before today. Shown as warnings, not in the week. |
+| Upcoming dues | Tasks not done, kind Due, with a cost, due from today to the end of this month. |
+| Budget | One per month. Set from the three-dot menu next to the budget figure. |
+| Money warnings | "Over budget" when spent is more than the budget; otherwise "Dues won't fit" when upcoming dues are more than what is left (equal is fine). No budget, no warning. |
+| Expense categories | Food, Transport, Bills, Shopping, Health, Fun, or "Other" with the user's own label (1 to 40 characters, trimmed). A blank label is saved as "Other". |
+| Home headline | "Nothing due this week. Add a task to begin." only when there are no tasks at all; otherwise a count and the next task. |
+| Do I need `dotenv`? | No. Node 20.6+ loads `.env` itself with `node --env-file=.env`. |
 
-**Left out of v1 (not asked for):** editing tasks or expenses, deleting expenses, recurring tasks, charts, login. Each is easy to add later.
+**Left out of v1:** login, editing tasks or expenses, deleting expenses, recurring tasks, charts, the AI ask bar (space is planned in DESIGN.md).
 
 ---
 
@@ -30,162 +38,97 @@ Stack: Node.js + Express (backend), Supabase Postgres (database), plain HTML/CSS
 
 ```
 lifeos/
-├── .gitignore            Keeps node_modules/ and .env out of Git
-├── .env.example          Variable names with no values (committed)
-├── .env                  Your real Supabase URL and secret key (NOT committed)
-├── package.json          Dependencies and the npm scripts: start, dev, test
-├── README.md             How to set up and run the app
+├── .gitignore, .env.example, .env (not committed), package.json
+├── README.md             Setup on a new computer, migrations, troubleshooting
 ├── PLAN.md               This file
+├── DESIGN.md             Colours, type, layout and states
+├── CLAUDE.md             Working rules for Claude Code
 │
 ├── db/
-│   └── schema.sql        SQL you paste into Supabase once to create the tables
+│   ├── schema.sql        The whole, latest database. Run once on a new Supabase project.
+│   └── migrations/       Changes for a database created earlier. Run in number order, once each.
+│       ├── 002_task_kind.sql         Adds tasks.kind; only Due tasks may have a cost
+│       └── 003_category_length.sql   Expense category is 1 to 40 characters, trimmed
 │
 ├── server/
-│   ├── index.js          Starts Express, serves public/, mounts the API routes, handles errors
-│   ├── supabase.js       Creates the one Supabase client from the .env values
-│   ├── user.js           getUserId(req): returns null in v1, the logged-in user in v2
-│   ├── validate.js       Small checks shared by the routes: valid date, positive amount, etc.
-│   ├── summary.js        Pure function that computes the dashboard numbers (no database, easy to test)
+│   ├── index.js          Starts Express, serves public/, mounts the routes, turns errors into JSON
+│   ├── supabase.js       The one Supabase client, from .env (stops with a clear message if a value is missing)
+│   ├── user.js           getUserId(req) and forUser(query, req): v1 = rows with no user
+│   ├── validate.js       Checks for tasks, budgets, expenses, dates, months and ids
+│   ├── summary.js        Pure function for the Home numbers, plus the date window it needs
+│   ├── errors.js         Turns any server error into a friendly message (database down, wrong key, missing migration); in production only a general one
 │   └── routes/
-│       ├── tasks.js      GET, POST, PATCH (mark done), DELETE /api/tasks
+│       ├── tasks.js      GET, POST, PATCH (done), DELETE /api/tasks
 │       ├── budget.js     GET and PUT /api/budget?month=YYYY-MM
 │       ├── expenses.js   GET and POST /api/expenses
-│       └── dashboard.js  GET /api/dashboard?today=YYYY-MM-DD (loads data, calls summary.js)
+│       └── dashboard.js  GET /api/dashboard?today=YYYY-MM-DD
 │
-├── public/               Everything the browser loads
-│   ├── index.html        The page: Dashboard, Tasks and Money sections
-│   ├── styles.css        All styling
-│   ├── api.js            One small fetch helper: calls /api/..., throws on errors
-│   ├── tasks.js          Task list, add form, done checkbox, delete button
-│   ├── money.js          Budget form, expense form, this month's expense list
-│   └── dashboard.js      Loads /api/dashboard and shows the numbers and the warning
+├── public/
+│   ├── index.html        Header, the three sections, and templates for rows, tiles and banners
+│   ├── styles.css        Everything in DESIGN.md
+│   ├── api.js            The only way the page calls the server; readable errors
+│   ├── ui.js             Shared helpers: ₹ and date formats, states, notices, the "something changed" signal
+│   ├── nav.js            Shows one section at a time from the URL hash
+│   ├── home.js           Warnings, headline, week ribbon, money line; refreshes after any change
+│   ├── tasks.js          Task form (Kind, Due date, Cost for Due), list, done, delete
+│   └── money.js          Budget menu and dialog, expense form (custom category), this month's list
 │
-└── test/
-    └── summary.test.js   Tests for summary.js using Node's built-in test runner
+└── test/                 Node's built-in test runner: validate, summary and errors
 ```
-
-**Dependencies:** just `express` and `@supabase/supabase-js`. Tests use `node:test`, which comes with Node, so there is nothing extra to install.
 
 ## API
 
-All responses are JSON. Errors look like `{ "error": "message" }` with status 400 (your input was wrong), 404 (not found) or 500 (server problem).
+All responses are JSON. Errors look like `{ "error": "message" }`: 400 (your input was wrong), 404 (not found), 503 (database unreachable or wrong key) or 500 (anything else).
 
 | Method | Path | Body or query | Does |
 |---|---|---|---|
-| GET | `/api/health` | | Says the server is up and can reach the database |
+| GET | `/api/health` | | Server is up and can reach the database |
 | GET | `/api/tasks` | | All tasks, soonest due first |
-| POST | `/api/tasks` | `{ title, due_date, cost? }` | Adds a task |
-| PATCH | `/api/tasks/:id` | `{ done: true/false }` | Marks done or not done |
+| POST | `/api/tasks` | `{ title, due_date, kind?, cost? }` | Adds a task (cost only when kind is `due`) |
+| PATCH | `/api/tasks/:id` | `{ done }` | Marks done or not done |
 | DELETE | `/api/tasks/:id` | | Deletes a task |
-| GET | `/api/budget` | `?month=2026-10` | Budget for that month, or `null` |
+| GET | `/api/budget` | `?month=2026-10` | That month's budget, or `null` |
 | PUT | `/api/budget` | `{ month, amount }` | Sets or replaces that month's budget |
-| GET | `/api/expenses` | `?month=2026-10` | Expenses in that month, newest first |
+| GET | `/api/expenses` | `?month=2026-10` | That month's expenses, newest first |
 | POST | `/api/expenses` | `{ amount, category, spent_on }` | Records an expense |
-| GET | `/api/dashboard` | `?today=2026-10-11` | `{ tasksDueThisWeek, spentThisMonth, budget, budgetRemaining, upcomingTaskCost, overBudgetWarning }` |
+| GET | `/api/dashboard` | `?today=2026-10-13` | The Home numbers (below) |
 
-**Validation (at the backend, because the browser can't be trusted):**
-- title: required, trimmed, 1 to 200 characters
-- dates: real `YYYY-MM-DD` dates
-- cost: optional, 0 or more
-- amount: more than 0
-- category: must be one of the list
+`/api/dashboard` returns `tasksDueThisWeek`, `overdueTasks` (each with `daysOverdue`), `taskCount`, `spentThisMonth`, `budget`, `budgetRemaining`, `overspentBy`, `upcomingTaskCost`, `overBudgetWarning` and `spendingByDay` (7 days from today). Plain numbers, no ₹.
 
-## Database (in `db/schema.sql`)
+## Database (`db/schema.sql`)
 
-**tasks**: `id` (uuid), `user_id` (uuid, empty in v1), `title` (text), `due_date` (date), `cost` (numeric, optional), `done` (boolean, default false), `created_at` (timestamp)
+- **tasks**: `id`, `user_id`, `title` (1 to 200), `due_date`, `kind` (due, homework, project, chore, other; default other), `cost` (0 or more, only when kind is due), `done`, `created_at`
+- **expenses**: `id`, `user_id`, `amount` (more than 0), `category` (1 to 40, trimmed), `spent_on`, `created_at`
+- **budgets**: `id`, `user_id`, `month` (always the 1st), `amount` (0 or more), `created_at`; one per user per month (`unique nulls not distinct`)
+- **Row Level Security** is on for all three tables with no policies, so only the backend's secret key can read or write.
 
-**expenses**: `id`, `user_id`, `amount` (numeric, > 0), `category` (text), `spent_on` (date), `created_at`
-
-**budgets**: `id`, `user_id`, `month` (date, always the 1st of the month), `amount` (numeric, ≥ 0), `created_at`
-- One budget per user per month: `unique nulls not distinct (user_id, month)`. "Nulls not distinct" matters in v1 because `user_id` is empty, and without it Postgres would allow duplicate budgets.
-
-**Row Level Security (RLS)** is turned **on** for all three tables, with **no policies**. That means the public ("publishable"/"anon") key can't read or write anything. Only our backend, using the secret key, can. When login arrives, we add real policies.
-
-Checks such as `amount > 0` are also in the database, so bad data can't get in even if the code has a bug.
+**Changing the database:** add a new numbered file to `db/migrations` and make the same change in `db/schema.sql`, so new and existing databases end up the same.
 
 ---
 
-## What you set up in Supabase yourself
+## Build history
 
-1. Sign up at supabase.com and create a **new project**. Pick a region near you. Save the database password somewhere safe (a password manager). You won't need it in v1, but you can't see it again later.
-2. When I give you `db/schema.sql` (step 2 below): open **SQL Editor → New query**, paste the file, click **Run**. Then check that **Table Editor** shows `tasks`, `expenses` and `budgets`.
-3. Go to **Project Settings → API Keys** (some projects call this **API**) and copy:
-   - the **Project URL** → `SUPABASE_URL`
-   - the **secret** key (starts with `sb_secret_`; in older projects it's the `service_role` key) → `SUPABASE_SECRET_KEY`
-4. Paste both into `.env`. **Never** put the secret key in any file under `public/`, in a screenshot, or in a chat. It skips all security rules. If it ever leaks, rotate it in the same settings page.
-5. Have **Node.js 22 LTS** installed (`node -v` should print v22 or newer; anything from 20.6 works).
+Each step was tested and committed on its own.
 
----
+0. **Skeleton**: `.gitignore`, `.env.example`, `package.json`, README.
+1. **Express server** on `localhost:3000` with `/api/health`.
+2. **Supabase**: schema, client, `user.js`; health checks the database.
+3. **Tasks API**: list and add, with validation.
+4. **Tasks API**: mark done and delete; unknown ids give 404.
+5. **Tasks page**, following DESIGN.md (marble, frosted cards, gold), with loading, empty and error states.
+6. and 7. **Money**: monthly budget and expenses, routes and page; ₹ everywhere.
+- **Design pass**: wordmark, top navigation with one section at a time, budget three-dot menu and dialog.
+- **Batch B**: task kinds (migration 002), custom expense categories (migration 003).
 
-## Build order
-
-Each step ends with something you can see working. Test it, then commit before going on. Commit commands are just a suggestion. Windows note: in PowerShell use `curl.exe`, not `curl`, or test from the browser.
-
-### Step 0: Project skeleton
-Create `.gitignore`, `.env.example`, `package.json`, `README.md`. Run `npm install`.
-**Test:** create an empty `.env` and run `git status`. `.env` and `node_modules/` must **not** appear.
-**Commit:** `Set up project skeleton`
-
-### Step 1: Express server serving a page
-`server/index.js` serving `public/index.html` (just a heading) and `GET /api/health` → `{ ok: true }`. Server listens on `localhost:3000` only.
-**Test:** `npm run dev`, open http://localhost:3000 and http://localhost:3000/api/health.
-**Commit:** `Add Express server and health check`
-
-### Step 2: Connect to Supabase
-You create the project (setup steps 1 to 4). I write `db/schema.sql`, `server/supabase.js` and `server/user.js`. The health check now runs a tiny query. The server refuses to start, with a clear message, if a `.env` value is missing.
-**Test:** `/api/health` shows `{ ok: true, db: true }`. Break the URL in `.env` on purpose and see a clear error, then fix it.
-**Commit:** `Add database schema and Supabase connection`
-
-### Step 3: Tasks API: list and add
-`server/validate.js` and `server/routes/tasks.js` with GET and POST.
-**Test:** POST a task with curl and see it in GET and in Supabase's Table Editor. POST with an empty title and get a 400.
-**Commit:** `Add tasks API: list and create`
-
-### Step 4: Tasks API: done and delete
-PATCH and DELETE. An unknown id gives 404.
-**Test:** mark a task done, delete one, try a made-up id.
-**Commit:** `Add tasks API: mark done and delete`
-
-### Step 5: Tasks page section
-`public/api.js`, `public/tasks.js`, the Tasks section of `index.html`, and basic `styles.css`. Text from the database is always shown with `textContent`, never `innerHTML`, so a task titled `<script>` can't run code.
-**Test:** add, tick done, and delete tasks in the browser. Refresh: they're still there. Add a task titled `<b>hi</b>` and it shows the tags as plain text.
-**Commit:** `Add tasks UI`
-
-### Step 6: Budget
-`server/routes/budget.js` and the budget form in `public/money.js`.
-**Test:** set this month's budget, refresh, it's still there. Set it again and it's replaced, not duplicated (check Table Editor).
-**Commit:** `Add monthly budget`
-
-### Step 7: Expenses
-`server/routes/expenses.js`, the expense form and this month's list in `public/money.js`.
-**Test:** add expenses this month and last month. Only this month's show. Amount 0 or −5 is rejected.
-**Commit:** `Add expenses`
-
-### Step 8: Dashboard calculation and tests
-`server/summary.js` (pure function: takes tasks, expenses, budget and today, returns plain numbers, no formatting or ₹) and `test/summary.test.js`.
-- **tasksDueThisWeek:** tasks not done, any kind, due from today through the next 6 days, soonest first.
-- **upcomingTaskCost:** tasks not done, kind "due", with a cost, due from today to the end of this month.
-- **spentThisMonth:** expenses dated in today's month. **budget:** this month's budget or none. **budgetRemaining:** budget minus spent (can be negative), none if no budget.
-- **overBudgetWarning:** only when upcomingTaskCost is more than budgetRemaining (equal is **not** a warning). No budget set means no warning.
-
-Cases to cover: a week that crosses into next month (and next year), tasks already done (ignored), tasks with no cost, a Homework task (in the week, adds no cost), costs after this month (not counted), overdue tasks (not counted), no budget set, a budget of 0, and the warning exactly at the limit.
-**Test:** `npm test`, all passing.
-**Commit:** `Add dashboard calculation with tests`
-
-### Step 9: Dashboard API and section
-`server/routes/dashboard.js` and `public/dashboard.js`. The dashboard refreshes after any task, budget or expense change.
-**Test:** set budget 100, add expenses of 70, add a task costing 50 due this month → warning shows. Mark the task done → warning goes away.
-**Commit:** `Add dashboard`
-
-### Step 10: Finish
-Friendly error messages in the UI when the server is down. README updated with setup and run steps. Do every test from steps 1 to 9 once more.
-**Commit:** `Polish errors and README`
+8. **Dashboard numbers**: `summary.js` with tests for every edge case.
+9. **Home**: `/api/dashboard`, warning banners (amber for overdue, terracotta for money), headline, 7-day ribbon, money line with progress bar; refreshes after any change.
+10. **Finish**: friendly error messages in every section (server stopped, database unreachable, wrong key, missing migration), and only a general message in production (NODE_ENV=production) with full details in the server log, "Add a task to begin" only when there are no tasks at all, README for a new computer, this file brought up to date.
 
 ---
 
 ## Later: adding login (v2 preview)
 
-1. Turn on Supabase Auth. The frontend sends the user's token to our backend with each request.
-2. `server/user.js` checks the token and returns the real user id. All routes already filter by `getUserId(req)`.
-3. Make `user_id` required (`not null`) and link it to `auth.users`. Add RLS policies so each user sees only their own rows.
-4. Decide what happens to the v1 rows that have no `user_id` (for example, give them to your own account).
+1. Turn on Supabase Auth. The page sends the user's token with each request.
+2. `server/user.js` checks the token and returns the real user id. All routes already filter by it.
+3. Make `user_id` required and linked to `auth.users`, in a new migration. Add RLS policies so each user sees only their own rows.
+4. Decide what happens to v1 rows with no `user_id` (for example, give them to your own account).

@@ -17,6 +17,7 @@ test('nothing at all gives zeros, an empty week and no warning', () => {
     budgetRemaining: null,
     upcomingTaskCost: 0,
     overBudgetWarning: false,
+    taskCount: 0,
     overdueTasks: [],
     overspentBy: 0,
     spendingByDay: [
@@ -156,4 +157,9 @@ test('expenseWindow covers this month, and stretches when the week runs into nex
   assert.deepEqual(expenseWindow('2026-10-13'), { start: '2026-10-01', end: '2026-11-01' });
   assert.deepEqual(expenseWindow('2026-10-28'), { start: '2026-10-01', end: '2026-11-04' });
   assert.deepEqual(expenseWindow('2026-12-30'), { start: '2026-12-01', end: '2027-01-06' });
+});
+
+test('taskCount counts every task, done or not, in any week', () => {
+  const tasks = [task('2026-10-14'), task('2026-12-01'), task('2026-01-01', { done: true })];
+  assert.equal(summarize({ tasks, expenses: [], budget: null, today: '2026-10-13' }).taskCount, 3);
 });

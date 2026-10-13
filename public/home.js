@@ -25,7 +25,8 @@ function when(iso, today) {
 
 function headline(s, today) {
   const week = s.tasksDueThisWeek;
-  if (!week.length) return 'Nothing due this week. Add a task to begin.';
+  if (!s.taskCount) return 'Nothing due this week. Add a task to begin.';
+  if (!week.length) return 'Nothing due this week.';
   const next = week[0];
   return `${plural(week.length, 'task', 'tasks')} this week. Next up: ${next.title}, ${when(next.due_date, today)}.`;
 }
