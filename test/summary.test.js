@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { summarize } from '../server/summary.js';
+import { summarize, expenseWindow } from '../server/summary.js';
 
 // Small builders so each test only spells out what matters to it
 let n = 0;
@@ -17,6 +17,17 @@ test('nothing at all gives zeros, an empty week and no warning', () => {
     budgetRemaining: null,
     upcomingTaskCost: 0,
     overBudgetWarning: false,
+    overdueTasks: [],
+    overspentBy: 0,
+    spendingByDay: [
+      { date: '2026-10-13', spent: 0 },
+      { date: '2026-10-14', spent: 0 },
+      { date: '2026-10-15', spent: 0 },
+      { date: '2026-10-16', spent: 0 },
+      { date: '2026-10-17', spent: 0 },
+      { date: '2026-10-18', spent: 0 },
+      { date: '2026-10-19', spent: 0 },
+    ],
   });
 });
 
@@ -104,4 +115,45 @@ test('a budget of 0 is a real budget: any upcoming cost warns', () => {
 test('already overspent with nothing upcoming still warns (0 is more than a negative remainder)', () => {
   const s = summarize({ tasks: [], expenses: [spent('2026-10-02', 150)], budget: 100, today: '2026-10-13' });
   assert.equal(s.overBudgetWarning, true);
+});
+
+test('overdue: not done, due before today, with whole days late, most late first', () => {
+  const tasks = [task('2026-10-31', { title: 'Lab record' }), task('2026-10-25', { title: 'Essay' }), task('2026-10-20', { done: true }), task('2026-11-02')];
+  const s = summarize({ tasks, expenses: [], budget: null, today: '2026-11-02' });
+  assert.deepEqual(s.overdueTasks.map((t) => [t.title, t.daysOverdue]), [['Essay', 8], ['Lab record', 2]]);
+});
+
+test('overdue tasks stay out of the week list', () => {
+  const s = summarize({ tasks: [task('2026-10-12')], expenses: [], budget: null, today: '2026-10-13' });
+  assert.equal(s.overdueTasks.length, 1);
+  assert.deepEqual(s.tasksDueThisWeek, []);
+});
+
+test('overspentBy is how far spent is above budget, else 0', () => {
+  const at = (budget, amount) => summarize({ tasks: [], expenses: [spent('2026-10-02', amount)], budget, today: '2026-10-13' }).overspentBy;
+  assert.equal(at(100, 150.1), 50.1);
+  assert.equal(at(100, 100), 0); // exactly at budget is not over
+  assert.equal(at(100, 20), 0);
+  assert.equal(at(null, 500), 0); // no budget, nothing to be over
+});
+
+test('spending per day covers the 7 days of the week, into next month, without float errors', () => {
+  const expenses = [
+    spent('2026-10-27', 999), // before the week
+    spent('2026-10-28', 0.1),
+    spent('2026-10-28', 0.2),
+    spent('2026-11-03', 40), // last day of the week, next month
+    spent('2026-11-04', 999), // after the week
+  ];
+  const s = summarize({ tasks: [], expenses, budget: null, today: '2026-10-28' });
+  assert.equal(s.spendingByDay.length, 7);
+  assert.deepEqual(s.spendingByDay[0], { date: '2026-10-28', spent: 0.3 });
+  assert.deepEqual(s.spendingByDay[6], { date: '2026-11-03', spent: 40 });
+  assert.equal(s.spentThisMonth, 999.3); // 27 and 28 Oct; November is not this month
+});
+
+test('expenseWindow covers this month, and stretches when the week runs into next month', () => {
+  assert.deepEqual(expenseWindow('2026-10-13'), { start: '2026-10-01', end: '2026-11-01' });
+  assert.deepEqual(expenseWindow('2026-10-28'), { start: '2026-10-01', end: '2026-11-04' });
+  assert.deepEqual(expenseWindow('2026-12-30'), { start: '2026-12-01', end: '2027-01-06' });
 });

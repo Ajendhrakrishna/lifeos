@@ -3,6 +3,7 @@ import { supabase } from './supabase.js';
 import tasksRouter from './routes/tasks.js';
 import budgetRouter from './routes/budget.js';
 import expensesRouter from './routes/expenses.js';
+import dashboardRouter from './routes/dashboard.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -22,6 +23,7 @@ app.get('/api/health', async (req, res) => {
 app.use('/api/tasks', tasksRouter);
 app.use('/api/budget', budgetRouter);
 app.use('/api/expenses', expensesRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 // Unknown /api routes get JSON, not an HTML page
 app.use('/api', (req, res) => {

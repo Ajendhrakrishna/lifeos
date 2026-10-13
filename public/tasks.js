@@ -1,5 +1,5 @@
 import { api } from './api.js';
-import { $, todayString, formatMoney, formatDate, setState, showNotice } from './ui.js';
+import { $, todayString, formatMoney, formatDate, setState, showNotice, announceChange } from './ui.js';
 
 const root = $('#tasks');
 const form = $('#task-form');
@@ -55,6 +55,7 @@ form.addEventListener('submit', async (event) => {
       method: 'POST',
       body: { title: f.title.value, due_date: f.due_date.value, kind, cost: cost || undefined },
     });
+    announceChange();
     f.title.value = '';
     f.cost.value = '';
     f.title.focus();
@@ -72,6 +73,7 @@ list.addEventListener('change', async (event) => {
   showNotice(root, '');
   try {
     await api(`/tasks/${check.closest('.task').dataset.id}`, { method: 'PATCH', body: { done: check.checked } });
+    announceChange();
     await load();
   } catch (err) {
     check.checked = !check.checked; // put it back, the server said no
@@ -86,6 +88,7 @@ list.addEventListener('click', async (event) => {
   button.disabled = true;
   try {
     await api(`/tasks/${button.closest('.task').dataset.id}`, { method: 'DELETE' });
+    announceChange();
     await load();
   } catch (err) {
     button.disabled = false;

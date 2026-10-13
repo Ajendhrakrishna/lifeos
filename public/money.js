@@ -1,5 +1,5 @@
 import { api } from './api.js';
-import { $, todayString, formatMoney, formatDate, setState, showNotice } from './ui.js';
+import { $, todayString, formatMoney, formatDate, setState, showNotice, announceChange } from './ui.js';
 
 const root = $('#money');
 const list = $('#expense-list');
@@ -59,6 +59,7 @@ function onSubmit(form, send, noticeRoot = root) {
     showNotice(noticeRoot, '');
     try {
       await send(form.elements);
+      announceChange();
       await load();
     } catch (err) {
       showNotice(noticeRoot, err.message);

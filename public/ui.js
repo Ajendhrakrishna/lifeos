@@ -32,3 +32,6 @@ export function showNotice(root, message) {
   $('.notice-text', notice).textContent = message;
   notice.hidden = !message;
 }
+
+// Tell the rest of the page that tasks, the budget or expenses changed (Home listens and refreshes)
+export const announceChange = () => document.dispatchEvent(new Event('lifeos:change'));

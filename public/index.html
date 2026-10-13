@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Marble veining, drawn in code. Kept in the margins so text never sits on a vein. -->
+  <!-- Marble veining, drawn in code. Kept in the side margins and below the header so text never sits on a vein. -->
   <svg class="marble" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
     <defs>
       <filter id="soft" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="0.8"/></filter>
@@ -18,12 +18,11 @@
       <ellipse cx="1280" cy="300" rx="240" ry="200"/>
     </g>
     <g fill="none" stroke-linecap="round" filter="url(#soft)">
-      <path d="M-10 80 C90 200 40 320 160 430 S260 640 190 760 S300 860 280 920" stroke="#7A6858" stroke-opacity="0.22" stroke-width="1.4"/>
-      <path d="M160 430 C230 400 300 440 330 520" stroke="#7A6858" stroke-opacity="0.15" stroke-width="0.9"/>
+      <path d="M-10 220 C90 300 40 380 160 470 S260 640 190 760 S300 860 280 920" stroke="#7A6858" stroke-opacity="0.22" stroke-width="1.4"/>
+      <path d="M160 470 C230 440 300 480 330 560" stroke="#7A6858" stroke-opacity="0.15" stroke-width="0.9"/>
       <path d="M-10 300 C80 340 120 400 60 520" stroke="#B8934A" stroke-opacity="0.35" stroke-width="1"/>
-      <path d="M300 -10 C360 40 330 90 380 140" stroke="#7A6858" stroke-opacity="0.14" stroke-width="0.9"/>
-      <path d="M1450 40 C1340 180 1400 300 1290 420 S1180 600 1260 720 S1330 840 1300 920" stroke="#7A6858" stroke-opacity="0.22" stroke-width="1.4"/>
-      <path d="M1290 420 C1220 380 1160 420 1130 500" stroke="#7A6858" stroke-opacity="0.15" stroke-width="0.9"/>
+      <path d="M1450 220 C1340 300 1400 380 1290 460 S1180 620 1260 720 S1330 840 1300 920" stroke="#7A6858" stroke-opacity="0.22" stroke-width="1.4"/>
+      <path d="M1290 460 C1220 420 1160 460 1130 540" stroke="#7A6858" stroke-opacity="0.15" stroke-width="0.9"/>
       <path d="M1450 560 C1370 600 1340 680 1400 780" stroke="#B8934A" stroke-opacity="0.35" stroke-width="1"/>
       <path d="M1000 920 C1040 860 1010 820 1070 770" stroke="#7A6858" stroke-opacity="0.14" stroke-width="0.9"/>
     </g>
@@ -32,13 +31,57 @@
   <header class="site-header">
     <h1 class="wordmark"><span class="life">Life</span><span class="os">OS</span></h1>
     <nav class="nav" aria-label="Sections">
+      <a class="nav-link" href="#home">Home</a>
       <a class="nav-link" href="#tasks">Tasks</a>
       <a class="nav-link" href="#money">Money</a>
     </nav>
   </header>
 
   <main>
-    <section id="tasks" class="card" aria-labelledby="tasks-heading">
+    <section id="home" aria-labelledby="home-heading">
+      <div class="skeletons" data-state="loading" hidden>
+        <span class="sr-only">Loading your week</span>
+        <div class="skeleton skeleton-tall" aria-hidden="true"></div>
+        <div class="skeleton" aria-hidden="true"></div>
+      </div>
+
+      <div class="card state" data-state="error" hidden>
+        <p class="state-line">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg>
+          <span class="state-error-text"></span>
+        </p>
+        <button class="btn btn-quiet retry" type="button">Try again</button>
+      </div>
+
+      <div class="home-content" hidden>
+        <div class="banners" aria-live="polite"></div>
+
+        <div class="card">
+          <p class="notice" role="alert" hidden>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg>
+            <span class="notice-text"></span>
+          </p>
+          <h2 id="home-heading" class="headline"></h2>
+          <ol class="ribbon" tabindex="0" aria-label="The next 7 days"></ol>
+        </div>
+
+        <div class="card money-line">
+          <div>
+            <span class="label">Left to spend</span>
+            <p class="big" id="left-figure"></p>
+          </div>
+          <div class="money-line-side">
+            <p id="spent-of" class="mono"></p>
+            <a class="text-link set-budget-link" href="#money">Set a budget</a>
+          </div>
+          <div class="progress" role="progressbar" aria-label="Budget used" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tasks" class="card" hidden aria-labelledby="tasks-heading">
       <h2 id="tasks-heading">Tasks</h2>
 
       <form id="task-form" class="task-form" novalidate>
@@ -217,7 +260,28 @@
     </li>
   </template>
 
+  <template id="banner-template">
+    <p class="banner">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5"/><path d="M12 17.5h.01"/></svg>
+      <span class="banner-text"></span>
+    </p>
+  </template>
+
+  <template id="day-template">
+    <li class="day">
+      <p class="day-head"><span class="day-name"></span> <span class="day-date mono"></span></p>
+      <ul class="day-tasks"></ul>
+      <p class="day-empty" aria-label="Nothing due">—</p>
+      <p class="day-spent mono"></p>
+    </li>
+  </template>
+
+  <template id="day-task-template">
+    <li class="day-task"><span class="day-task-kind"></span><span class="day-task-title"></span></li>
+  </template>
+
   <script type="module" src="nav.js"></script>
+  <script type="module" src="home.js"></script>
   <script type="module" src="tasks.js"></script>
   <script type="module" src="money.js"></script>
 </body>

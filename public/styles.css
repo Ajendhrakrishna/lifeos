@@ -7,7 +7,8 @@
   --taupe: #7A6858;
   --gold: #B8934A;
   --gold-light: #E6D2A0;
-  --terracotta: #A5472F; /* money problems only; unused until the dashboard */
+  --terracotta: #A5472F; /* money problems only */
+  --amber: #B36A00; /* deadline warnings only */
 
   --gold-metal: linear-gradient(135deg, var(--gold), var(--gold-light) 50%, var(--gold));
   --gold-text: linear-gradient(135deg, #C9A24F, #8F6E2E); /* wordmark "OS" only */
@@ -50,7 +51,8 @@ body {
 }
 
 /* Header */
-.site-header, main { width: min(100% - 32px, 720px); margin-inline: auto; }
+.site-header, main { width: min(100% - 32px, 1040px); margin-inline: auto; }
+main > .card { max-width: 720px; margin-inline: auto; }
 .site-header {
   display: flex;
   flex-wrap: wrap;
@@ -172,6 +174,86 @@ input.mono { font-family: var(--mono); }
   align-items: center;
   margin: 16px 0 0;
 }
+
+/* Home */
+.headline { margin: 0 0 16px; font: 600 1.5rem/1.3 var(--serif); overflow-wrap: anywhere; }
+
+/* Warning banners: frosted cream tinted with their colour */
+.banners { display: grid; gap: 12px; margin-bottom: 24px; }
+.banners:empty { display: none; }
+.banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 14px 16px;
+  color: var(--charcoal);
+  background: color-mix(in srgb, var(--tint) 10%, rgba(247, 240, 226, 0.85));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--tint) 35%, transparent);
+  border-left: 4px solid var(--tint);
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.banner .icon { color: var(--tint); }
+.banner-amber { --tint: var(--amber); }
+.banner-terracotta { --tint: var(--terracotta); }
+
+/* Week ribbon: 7 day tiles; today is espresso */
+.ribbon {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 150px;
+  padding: 12px 10px;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(184, 147, 74, 0.45);
+  border-radius: 12px;
+}
+.day p { margin: 0; }
+.day-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 6px; }
+.day-name { font-size: 0.875rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--taupe); }
+.day-date { font-size: 0.875rem; color: var(--taupe); }
+.day-tasks { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.day-task-kind {
+  display: block;
+  font-size: 0.875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--taupe);
+}
+.day-task-title { display: block; font-size: 0.9375rem; line-height: 1.3; overflow-wrap: anywhere; }
+.day-empty { color: var(--taupe); opacity: 0.6; }
+.day-spent { margin-top: auto !important; font-size: 0.875rem; color: var(--taupe); }
+.day.today { color: var(--cream); background: var(--espresso); border-color: var(--gold); }
+.day.today .day-name, .day.today .day-date, .day.today .day-task-kind, .day.today .day-spent, .day.today .day-empty {
+  color: var(--gold-light);
+}
+
+/* Money line */
+.money-line { display: grid; grid-template-columns: 1fr auto; gap: 12px 24px; align-items: end; }
+.money-line p { margin: 0; }
+.money-line-side { display: grid; gap: 4px; justify-items: end; text-align: right; }
+.text-link { color: var(--charcoal); text-decoration-color: var(--gold); text-underline-offset: 3px; }
+.progress {
+  grid-column: 1 / -1;
+  height: 10px;
+  overflow: hidden;
+  background: rgba(184, 147, 74, 0.18);
+  border-radius: 999px;
+}
+.progress-fill { width: 0; height: 100%; background: var(--gold-metal); border-radius: inherit; transition: width 0.8s ease; }
+.progress.over .progress-fill { background: var(--terracotta); }
+.skeleton-tall { height: 240px; }
 
 /* Money */
 .figures { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
@@ -307,6 +389,20 @@ input.mono { font-family: var(--mono); }
 
 @media (prefers-reduced-motion: reduce) {
   .skeleton { animation: none; }
+  .progress-fill { transition: none; }
+}
+
+/* Narrower screens: the ribbon scrolls sideways */
+@media (max-width: 900px) {
+  .ribbon {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 160px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 8px;
+  }
+  .day { scroll-snap-align: start; }
 }
 
 /* Phones */
@@ -314,5 +410,8 @@ input.mono { font-family: var(--mono); }
   .card { padding: 16px; }
   .task-form .field, .expense-form .field, .task-form .btn { flex-basis: 100%; }
   .figures { grid-template-columns: 1fr; }
+  .ribbon { grid-auto-columns: 80%; } /* one day mostly visible, the next peeking in */
+  .money-line { grid-template-columns: 1fr; }
+  .money-line-side { justify-items: start; text-align: left; }
   .btn-gold, .expense-form .btn { width: 100%; }
 }
