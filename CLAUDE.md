@@ -23,3 +23,4 @@ LifeOS is a personal management app that connects tasks and money: tasks with du
 - Never commit or push. The user does that themselves.
 - Follow DESIGN.md for all UI work.
 - Before saying a step is done, use the Superpowers verification skill. Use the debugging skill when something fails. Use brainstorming only when I ask for a new feature that is not in PLAN.md. Follow DESIGN.md fully for UI work; do not cut design details to save code. My rules above still win: no commits, one step at a time.
+- Version 2 features follow the roadmap in PLAN.md, one feature per branch.

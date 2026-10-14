@@ -1,4 +1,4 @@
-# LifeOS: Version 1 Plan (as built)
+# LifeOS Plan
 
 A personal management app that connects tasks and money.
 Stack: Node.js + Express (backend), Supabase Postgres (database), plain HTML/CSS/JS (frontend).
@@ -127,12 +127,30 @@ Each step was tested and committed on its own.
 
 ---
 
-## Later: adding login (v2 preview)
+## Version 2 roadmap
 
-1. Turn on Supabase Auth. The page sends the user's token with each request.
-2. `server/user.js` checks the token and returns the real user id. All routes already filter by it.
-3. Make `user_id` required and linked to `auth.users`, in a new migration. Add RLS policies so each user sees only their own rows.
-4. Decide what happens to v1 rows with no `user_id` (for example, give them to your own account).
-5. **Deploy**, only after login works. v1 is never deployed: it has no login, so anyone with the address could see and change all data.
+Built in this order, one feature per branch.
+
+1. **Login and per-user data.** Includes password reset: a student who forgets their password can reset it by email. Done when: two test accounts cannot see each other's data, and a forgotten password can be reset.
+   - Turn on Supabase Auth. The page sends the user's token with each request.
+   - `server/user.js` checks the token and returns the real user id. All routes already filter by it.
+   - Make `user_id` required and linked to `auth.users`, in a new migration. Add RLS policies so each user sees only their own rows.
+   - Decide what happens to v1 rows with no `user_id` (for example, give them to your own account).
+2. **Deploy.** Production settings, host allow-list, hide X-Powered-By, security headers. Done when: LifeOS opens on a phone from a public link.
+   - Only after login works. v1 is never deployed: it has no login, so anyone with the address could see and change all data.
    - Add the real domain to `ALLOWED` in `server/host.js`, and listen on all addresses instead of `127.0.0.1` in `server/index.js`.
    - Set `NODE_ENV=production` on the server, so visitors see only a general error message and full details go to the server log.
+3. **Everyday fixes.** Edit tasks and expenses, delete expenses, a friendlier date message, phone layout (every section works on a phone screen). Done when: tasks and expenses can be edited and expenses deleted from the page, a bad date gets a plain-language message, and every section works on a phone screen.
+4. **Academics.**
+   - **4a. Exams and assignments with countdowns.** Done when: exams and assignments can be added, and each shows a countdown.
+   - **4b. Weekly timetable.** Done when: a weekly timetable can be entered and viewed.
+   - **4c. Exam portions (topics to study).** Topics can be added in three ways: typed in one at a time, pasted (one per line), or imported from an uploaded PDF or DOCX file.
+     - Uploads: the server extracts the text without any AI, accepts only PDF and DOCX with a size limit, never runs anything from inside the file, and shows an editable topic list for the student to review before saving.
+     - Only the topics are saved: the file is discarded, never stored, and never sent to a third party.
+     - A file with no readable text gets a message that suggests typing or pasting instead.
+     - Reading topics from a file with AI is Version 3.
+     - Done when: topics can be added by typing, pasting or uploading, ticked off as done, and each exam shows topics left and topics per day needed.
+5. **Lent / Owed.** Done when: money lent is recorded separately, is not counted as spent, and can be marked as paid back.
+6. **Trust.** Privacy policy, delete my account. Done when: a privacy policy is linked from the page, and a user can delete their account and all their data.
+
+**Version 3:** the AI ask bar (Groq first, with OpenRouter and Gemini as fallbacks behind `server/ai.js`, summaries only, a daily limit per user), predictions, planned vs actual, and reminders.
