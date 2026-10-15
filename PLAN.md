@@ -144,6 +144,7 @@ Built in this order, one feature per branch.
    - Keep the sign-in, sign-up and reset attempt limits in a shared store (for example a database table or Redis) instead of server memory, so they survive restarts and work across more than one server.
    - Trust the host's proxy (Express `trust proxy`), so the attempt limits see each visitor's real address instead of the proxy's.
    - Send auth emails through a proper email service (custom SMTP, for example Resend), because Supabase's built-in email is only for testing.
+   - With custom SMTP on, edit Supabase's Confirm signup and Reset password templates to link to LifeOS with `token_hash`, and add click-to-confirm pages, so email scanners can no longer use up one-time links.
 3. **Everyday fixes.** Edit tasks and expenses, delete expenses, a friendlier date message, phone layout (every section works on a phone screen). Done when: tasks and expenses can be edited and expenses deleted from the page, a bad date gets a plain-language message, and every section works on a phone screen.
 4. **Academics.**
    - **4a. Exams and assignments with countdowns.** Done when: exams and assignments can be added, and each shows a countdown.
