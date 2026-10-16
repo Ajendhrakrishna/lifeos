@@ -134,7 +134,7 @@ main { padding-bottom: 48px; }
 .task-form .field, .expense-form .field { flex: 1 1 140px; }
 .task-form .field-title, .expense-form .btn { flex-basis: 100%; }
 
-input[type="text"], input[type="date"], select {
+input[type="text"], input[type="date"], input[type="email"], input[type="password"], select {
   width: 100%;
   min-height: 44px;
   padding: 8px 12px;
@@ -179,6 +179,22 @@ input.mono { font-family: var(--mono); }
   align-items: center;
   margin: 16px 0 0;
 }
+
+/* Sign-in and sign-up pages: the wordmark above one centred frosted card */
+.auth { width: min(100% - 32px, 420px); margin-inline: auto; padding: 56px 0; }
+.auth-wordmark { margin-bottom: 24px; text-align: center; }
+.auth-card h1 { margin: 0 0 16px; font: 600 1.75rem/1.2 var(--serif); }
+.auth-card .notice { margin: 0 0 16px; }
+.auth-card .skeletons { margin-top: 0; }
+.auth-form { display: grid; gap: 16px; }
+.auth-form .btn { width: 100%; }
+.password-field { position: relative; }
+.password-field input { padding-right: 52px; }
+.password-toggle { position: absolute; top: 0; right: 0; }
+.password-toggle[aria-pressed="true"] { color: var(--charcoal); }
+.field-hint { margin: 4px 0 0; font-size: 0.875rem; color: var(--taupe); }
+.auth-text { margin: 0; }
+.auth-links { margin: 20px 0 0; font-size: 0.9375rem; }
 
 /* Home */
 .headline { margin: 0 0 16px; font: 600 1.5rem/1.3 var(--serif); overflow-wrap: anywhere; }

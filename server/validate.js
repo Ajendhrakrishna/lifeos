@@ -93,3 +93,18 @@ export function validateExpense(body = {}) {
   if (err) return { error: err };
   return { value: { amount, category, spent_on: body.spent_on } };
 }
+
+// Email and password from a sign-in or sign-up form. The email is trimmed and lower-cased.
+// Passwords are counted in bytes: Supabase ignores anything past 72 bytes, so longer ones are refused.
+export function validateCredentials(body = {}, { newPassword = false } = {}) {
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: 'Enter a valid email address' };
+  }
+  const password = typeof body.password === 'string' ? body.password : '';
+  const bytes = Buffer.byteLength(password);
+  if (bytes > 72) return { error: 'Password is too long (72 characters at most, fewer with accents or emoji)' };
+  if (newPassword && bytes < 8) return { error: 'Password must be at least 8 characters' };
+  if (bytes < 1) return { error: 'Enter your password' };
+  return { value: { email, password } };
+}

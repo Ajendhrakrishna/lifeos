@@ -7,14 +7,21 @@ import budgetRouter from './routes/budget.js';
 import expensesRouter from './routes/expenses.js';
 import dashboardRouter from './routes/dashboard.js';
 import { friendlyError } from './errors.js';
-import { localOnly } from './host.js';
+import { localOnly, sameOriginWrites } from './host.js';
+import authRouter from './routes/auth.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+const publicDir = join(import.meta.dirname, '..', 'public');
+
 app.use(localOnly); // first, so pages and /api are both protected
+app.use(sameOriginWrites);
 app.use(express.json());
-app.use(express.static(join(import.meta.dirname, '..', 'public')));
+app.use(express.static(publicDir));
+
+// The sign-in and sign-up pages share one file; its script picks the card from the address
+app.get(['/signin', '/signup'], (req, res) => res.sendFile(join(publicDir, 'auth.html')));
 
 app.get('/api/health', async (req, res) => {
   const { error } = await forUser(supabase.from('tasks').select('id'), req).limit(1);
@@ -26,6 +33,7 @@ app.get('/api/health', async (req, res) => {
   res.json({ ok: true, db: true });
 });
 
+app.use('/api/auth', authRouter);
 app.use('/api/tasks', tasksRouter);
 app.use('/api/budget', budgetRouter);
 app.use('/api/expenses', expensesRouter);

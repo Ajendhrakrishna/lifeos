@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · LifeOS</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Marble veining, drawn in code. Kept in the side margins and below the header so text never sits on a vein. -->
+  <svg class="marble" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="soft" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="0.8"/></filter>
+      <filter id="cloud" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>
+    </defs>
+    <g class="marble-cloud" filter="url(#cloud)" opacity="0.07">
+      <ellipse cx="200" cy="520" rx="260" ry="210"/>
+      <ellipse cx="1280" cy="300" rx="240" ry="200"/>
+    </g>
+    <g fill="none" stroke-linecap="round" filter="url(#soft)">
+      <path d="M-10 220 C90 300 40 380 160 470 S260 640 190 760 S300 860 280 920" class="vein" stroke-opacity="0.22" stroke-width="1.4"/>
+      <path d="M160 470 C230 440 300 480 330 560" class="vein" stroke-opacity="0.15" stroke-width="0.9"/>
+      <path d="M-10 300 C80 340 120 400 60 520" class="vein vein-gold" stroke-opacity="0.35" stroke-width="1"/>
+      <path d="M1450 220 C1340 300 1400 380 1290 460 S1180 620 1260 720 S1330 840 1300 920" class="vein" stroke-opacity="0.22" stroke-width="1.4"/>
+      <path d="M1290 460 C1220 420 1160 460 1130 540" class="vein" stroke-opacity="0.15" stroke-width="0.9"/>
+      <path d="M1450 560 C1370 600 1340 680 1400 780" class="vein vein-gold" stroke-opacity="0.35" stroke-width="1"/>
+      <path d="M1000 920 C1040 860 1010 820 1070 770" class="vein" stroke-opacity="0.14" stroke-width="0.9"/>
+    </g>
+  </svg>
+
+  <main class="auth">
+    <p class="wordmark auth-wordmark"><span class="life">Life</span><span class="os">OS</span></p>
+
+    <section id="auth-card" class="card auth-card">
+      <div class="skeletons" data-state="loading">
+        <span class="sr-only">Checking whether you are signed in</span>
+        <div class="skeleton" aria-hidden="true"></div>
+        <div class="skeleton" aria-hidden="true"></div>
+        <div class="skeleton" aria-hidden="true"></div>
+      </div>
+
+      <div data-state="signin" hidden>
+        <h1>Sign in</h1>
+        <p class="notice" role="alert" hidden>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg>
+          <span class="notice-text"></span>
+        </p>
+        <form id="signin-form" class="auth-form" novalidate>
+          <div class="field">
+            <label class="label" for="signin-email">Email</label>
+            <input id="signin-email" name="email" type="email" autocomplete="email" required>
+          </div>
+          <div class="field">
+            <label class="label" for="signin-password">Password</label>
+            <div class="password-field">
+              <input id="signin-password" name="password" type="password" autocomplete="current-password" required>
+              <button class="icon-btn password-toggle" type="button" aria-label="Show password" aria-pressed="false">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <button class="btn btn-gold" type="submit">Sign in</button>
+        </form>
+        <p class="auth-links"><a class="text-link" href="/signup">Create an account</a></p>
+      </div>
+
+      <div data-state="signup" hidden>
+        <h1>Create your account</h1>
+        <p class="notice" role="alert" hidden>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg>
+          <span class="notice-text"></span>
+        </p>
+        <form id="signup-form" class="auth-form" novalidate>
+          <div class="field">
+            <label class="label" for="signup-email">Email</label>
+            <input id="signup-email" name="email" type="email" autocomplete="email" required>
+          </div>
+          <div class="field">
+            <label class="label" for="signup-password">Password</label>
+            <div class="password-field">
+              <input id="signup-password" name="password" type="password" autocomplete="new-password" required aria-describedby="signup-password-hint">
+              <button class="icon-btn password-toggle" type="button" aria-label="Show password" aria-pressed="false">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <p id="signup-password-hint" class="field-hint">At least 8 characters.</p>
+          </div>
+          <button class="btn btn-gold" type="submit">Create account</button>
+        </form>
+        <p class="auth-links"><a class="text-link" href="/signin">Already have an account? Sign in</a></p>
+      </div>
+
+      <div data-state="sent" hidden>
+        <h1>Check your email</h1>
+        <p class="auth-text">Check your email to confirm your account. Open the link in this browser to finish signing up.</p>
+        <p class="auth-links"><a class="text-link" href="/signin">Back to sign in</a></p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="auth.js"></script>
+</body>
+</html>

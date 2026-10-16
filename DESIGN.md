@@ -38,6 +38,7 @@ Warm, luxurious, calm. Cream marble, frosted cards, metallic champagne gold. Sim
 - **Nav**, top right: "Home", "Tasks" and "Money" as plain text links, Charcoal, uppercase labels. The active one has a 2px metallic gold underline and `aria-current="page"`.
 - Only one section shows at a time. The URL hash picks it (#home, #tasks, #money), so a refresh stays put. Default is Home; an unknown hash falls back to Home.
 - On phones the header wraps: wordmark first, nav beneath if it does not fit.
+- **Sign out**: the last nav item, a plain text link in the same style, set slightly apart from the section links (a thin gold divider before it). It is never underlined as active.
 
 ## Layout
 
@@ -51,6 +52,14 @@ Top to bottom, every piece of text on a card or banner (never on bare marble):
    - Then one money banner in Terracotta: "Over budget" / "You're ₹X over budget this month", or else "Dues won't fit" / "Upcoming dues cost ₹X, ₹Y more than you have left". Link "Open money".
 2. **Week card**: one serif headline sentence summarising the week, then the **week ribbon**: 7 day tiles from today. Each tile shows the day and date, that day's tasks (kind label above each title), and that day's spending if any. Today's tile is Rich Espresso. Phones: the ribbon scrolls sideways, one day mostly visible and the next peeking in; it is keyboard-scrollable.
 3. **Money line card**: "Left to spend" as a big serif number, "₹X spent of ₹Y", and a metallic gold progress bar. Over budget: the bar is full and Terracotta.
+
+## Sign-in and sign-up pages
+
+- Their own page, without the nav: the wordmark centred above one frosted card, about 420px wide, centred on the marble. Every word sits on the card.
+- Card: a serif heading ("Sign in" or "Create your account"), labelled fields, one full-width gold button, then small Charcoal text links underlined in gold ("Create an account", "Already have an account? Sign in").
+- Fields use the right autocomplete hints (`email`, `current-password` or `new-password`). The password field has a show/hide line-icon button with a label that says which it will do.
+- While checking for an existing session, the card shows the slow gold shimmer, never an empty form.
+- Errors and notes (for example "Check your email…" or "If you just confirmed your email, sign in below.") appear inside the card above the form, in Charcoal with a line icon. Never Terracotta: these are not money problems.
 
 ## Menus and dialogs
 
