@@ -19,6 +19,13 @@ export async function api(path, { method = 'GET', body } = {}) {
         : "Can't reach the LifeOS server. Please try again in a few minutes.",
     );
   }
+  // Signed out (or the 30-day session ended): go to sign-in. Never for the sign-in page's own
+  // calls, or a wrong password would reload the page. The promise never settles, so the
+  // section doesn't flash an error while the browser leaves.
+  if (res.status === 401 && !path.startsWith('/auth/')) {
+    location.assign('/signin');
+    return new Promise(() => {});
+  }
   if (res.status === 204) return null;
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');

@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { authClient } from '../supabase.js';
+import { supabase, authClient } from '../supabase.js';
 import { validateCredentials } from '../validate.js';
 import { createLimiter } from '../limits.js';
-import { setSession, clearSession, currentUser, savePkce, takePkce } from '../session.js';
+import { setSession, clearSession, signedIn, savePkce, takePkce, readCookie, forgetRenewal } from '../session.js';
 
 // Never log req.body in this file: it holds passwords.
 const router = Router();
@@ -65,13 +65,27 @@ router.post('/signin', async (req, res) => {
   res.json({ ok: true });
 });
 
+// Renews the session if only the refresh cookie is left, so /signin can send the user to Home
 router.get('/me', async (req, res) => {
-  const user = await currentUser(req);
-  if (!user) return res.status(401).json({ error: 'Please sign in.' });
-  res.json({ user });
+  const session = await signedIn(req, res);
+  if (!session) return res.status(401).json({ error: 'Please sign in.' });
+  res.json({ user: session.user });
 });
 
-router.post('/signout', (req, res) => {
+// Revokes this browser's session at Supabase ('local': other devices stay signed in), then
+// clears the cookies, even if revoking failed.
+router.post('/signout', async (req, res) => {
+  const refreshToken = readCookie(req, 'lifeos_refresh');
+  try {
+    const session = await signedIn(req, res);
+    if (session) {
+      const { error } = await supabase.auth.admin.signOut(session.accessToken, 'local');
+      if (error) console.error('Sign-out could not revoke the session:', error.code ?? error.message);
+    }
+  } catch (err) {
+    console.error('Sign-out could not revoke the session:', err?.message);
+  }
+  if (refreshToken) forgetRenewal(refreshToken);
   clearSession(res);
   res.status(204).end();
 });

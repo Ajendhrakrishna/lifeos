@@ -1,5 +1,5 @@
 import { isAuthRetryableFetchError } from '@supabase/supabase-js';
-import { supabase } from './supabase.js';
+import { supabase, authClient } from './supabase.js';
 
 // The login cookies. Page JavaScript can't read any of them (httpOnly), and none holds a key.
 const ACCESS = 'lifeos_access'; // access token, sent everywhere, lasts as long as the token (1 hour)
@@ -46,6 +46,55 @@ export async function currentUser(req) {
   if (error && isAuthRetryableFetchError(error)) throw error;
   if (error || !data?.claims?.sub) return null;
   return { id: data.claims.sub, email: data.claims.email };
+}
+
+// Supabase hands out a new refresh token on every renewal, and the old one stops working.
+// Home asks for several things at once, so requests that arrive together with the same
+// expired session share one renewal. The result is kept for a few seconds for stragglers.
+// shortcut: kept in this server's memory, so it only helps within one server; fine until deploy.
+const renewals = new Map();
+function renew(refreshToken) {
+  if (!renewals.has(refreshToken)) {
+    const result = authClient().auth.refreshSession({ refresh_token: refreshToken });
+    renewals.set(refreshToken, result);
+    setTimeout(() => forgetRenewal(refreshToken), 10_000).unref();
+    // A network blip is not worth remembering: the next request should try again
+    result.then(({ error }) => error && isAuthRetryableFetchError(error) && forgetRenewal(refreshToken));
+  }
+  return renewals.get(refreshToken);
+}
+
+// Sign-out calls this, so a renewal shared a moment earlier can't keep the session alive.
+// (A data request already on its way when the user signs out could still set cookies again;
+// that window is a fraction of a second.)
+export const forgetRenewal = (refreshToken) => renewals.delete(refreshToken);
+
+// The signed-in user and their access token, renewing the session if the access cookie is
+// missing or expired but the refresh cookie still works (new cookies are set on `res`).
+// Returns null when neither works, and clears a refresh cookie that no longer works.
+export async function signedIn(req, res) {
+  const user = await currentUser(req);
+  if (user) return { user, accessToken: readCookie(req, ACCESS) };
+
+  const refreshToken = readCookie(req, REFRESH);
+  if (!refreshToken) return null;
+  const { data, error } = await renew(refreshToken);
+  if (error && isAuthRetryableFetchError(error)) throw error;
+  if (error || !data?.session?.user) {
+    clearSession(res);
+    return null;
+  }
+  setSession(res, data.session);
+  const { id, email } = data.session.user;
+  return { user: { id, email }, accessToken: data.session.access_token };
+}
+
+// Every data route needs a signed-in user: sets req.user, or answers 401.
+export async function requireUser(req, res, next) {
+  const session = await signedIn(req, res);
+  if (!session) return res.status(401).json({ error: 'Please sign in.' });
+  req.user = session.user;
+  next();
 }
 
 // After sign-up the login client has written its PKCE verifier into its store, under a key

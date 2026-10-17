@@ -26,13 +26,18 @@ const fakeDb = http.createServer((req, res) => {
   });
 });
 
+const USER_ID = '11111111-2222-4333-8444-555555555555'; // the signed-in test user
 let app; // our real budget route, mounted on a test server
 before(async () => {
   await new Promise((resolve) => fakeDb.listen(0, '127.0.0.1', resolve));
   process.env.SUPABASE_URL = `http://127.0.0.1:${fakeDb.address().port}`;
   process.env.SUPABASE_SECRET_KEY = 'test-key';
   const { default: budgetRouter } = await import('../server/routes/budget.js'); // after the env is set
-  const server = express().use(express.json()).use('/api/budget', budgetRouter).listen(0, '127.0.0.1');
+  const server = express()
+    .use(express.json())
+    .use((req, res, next) => ((req.user = { id: USER_ID }), next())) // stands in for requireUser
+    .use('/api/budget', budgetRouter)
+    .listen(0, '127.0.0.1');
   await new Promise((resolve) => server.on('listening', resolve));
   app = { server, url: `http://127.0.0.1:${server.address().port}/api/budget` };
 });
@@ -56,7 +61,7 @@ test('setting a budget is a single upsert on (user_id, month)', async () => {
   assert.equal(r.method, 'POST');
   assert.match(r.url, /^\/rest\/v1\/budgets\?.*on_conflict=user_id,month/);
   assert.match(r.prefer, /resolution=merge-duplicates/);
-  assert.deepEqual(JSON.parse(r.body), { month: '2026-10-01', amount: 5000, user_id: null });
+  assert.deepEqual(JSON.parse(r.body), { month: '2026-10-01', amount: 5000, user_id: USER_ID });
 });
 
 test('two budget saves at the same moment both succeed', async () => {
